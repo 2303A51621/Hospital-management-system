@@ -1,46 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CreditCard, FileText, ShieldCheck, CheckCircle2, XCircle, ArrowUpRight } from 'lucide-react';
-import axios from 'axios';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
+import { billingAPI, type BillingInvoice } from '../services/api';
 
-type BillingStatus = 'draft' | 'issued' | 'paid' | 'cancelled';
-type PaymentStatus = 'pending' | 'partial' | 'completed' | 'failed' | 'refunded';
-
-type BillItem = {
-  itemType: 'consultation' | 'lab-test' | 'medicine' | 'procedure' | 'bed-charges' | 'other';
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  discount?: number;
-  total?: number;
-};
-
-type Invoice = {
-  _id: string;
-  invoiceNumber: string;
-  patientId?: string;
-  invoiceDate?: string;
-  status: BillingStatus;
-  summary?: {
-    subtotal?: number;
-    gstAmount?: number;
-    totalAmount?: number;
-  };
-  paymentDetails?: {
-    paymentMethod?: string;
-    paymentStatus?: PaymentStatus;
-    transactionId?: string;
-  };
-  insurance?: {
-    insuranceProvider?: string;
-    claimStatus?: 'pending' | 'approved' | 'rejected' | 'na';
-    claimAmount?: number;
-  };
-  billItems?: BillItem[];
-};
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+type Invoice = BillingInvoice;
 
 export default function BillingPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -52,11 +16,7 @@ export default function BillingPage() {
 
   const fetchInvoices = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_BASE}/billing`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
+      const response = await billingAPI.getAll();
       const rows = Array.isArray(response.data?.data) ? response.data.data : [];
       setInvoices(rows);
     } catch (error) {
@@ -87,10 +47,7 @@ export default function BillingPage() {
 
   const handleRecordPayment = async (invoiceId: string) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(
-        `${API_BASE}/billing/${invoiceId}/payment`,
-        {
+      await billingAPI.recordPayment(invoiceId, {
           paymentMethod: selectedMethod,
           paymentGateway: selectedMethod === 'upi' ? 'UPI' : 'Card Gateway',
           transactionId: paymentReference || `TXN-${Date.now()}`,
@@ -98,9 +55,7 @@ export default function BillingPage() {
           insuranceProvider: claimProvider,
           policyNumber: claimPolicy,
           coverage: 'General hospitalisation',
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+        });
 
       await fetchInvoices();
     } catch (error) {
@@ -110,10 +65,7 @@ export default function BillingPage() {
 
   const handleCreateDemoInvoice = async () => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        `${API_BASE}/billing`,
-        {
+      await billingAPI.create({
           patientId: '000000000000000000000000',
           appointmentId: null,
           invoiceDate: new Date().toISOString(),
@@ -131,9 +83,7 @@ export default function BillingPage() {
           },
           paymentDetails: { paymentMethod: selectedMethod, paymentStatus: 'pending' },
           status: 'issued',
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+        });
 
       await fetchInvoices();
     } catch (error) {

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/+$/, '');
 
 const api = axios.create({
   baseURL: API_URL,
@@ -308,7 +308,9 @@ export const appointmentAPI = {
 };
 
 export const billingAPI = {
-  getAll: () => api.get<{ success: boolean; data: Array<{ summary?: { totalAmount?: number }; status?: string; paymentDetails?: { paymentStatus?: string } }>; count: number }>('/billing'),
+  getAll: () => api.get<{ success: boolean; data: BillingInvoice[]; count: number }>('/billing'),
+  recordPayment: (invoiceId: string, data: RecordPaymentPayload) => api.put(`/billing/${invoiceId}/payment`, data),
+  create: (data: CreateInvoicePayload) => api.post('/billing', data),
   createOnlineOrder: (invoiceId: string) =>
     api.post<{ success: boolean; data: { orderId: string; amount: number; currency: string; keyId: string } }>(
       `/billing/${invoiceId}/payment/order`
@@ -316,6 +318,38 @@ export const billingAPI = {
   verifyOnlinePayment: (invoiceId: string, data: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) =>
     api.post(`/billing/${invoiceId}/payment/verify`, data),
 };
+
+export interface BillingInvoice {
+  _id: string;
+  invoiceNumber: string;
+  patientId?: string;
+  invoiceDate?: string;
+  status: 'draft' | 'issued' | 'paid' | 'cancelled';
+  summary?: { subtotal?: number; gstAmount?: number; totalAmount?: number };
+  paymentDetails?: { paymentMethod?: string; paymentStatus?: string; transactionId?: string };
+  insurance?: { insuranceProvider?: string; claimStatus?: string; claimAmount?: number };
+  billItems?: Array<{ itemType: string; description: string; quantity: number; unitPrice: number; discount?: number; total?: number }>;
+}
+
+export interface RecordPaymentPayload {
+  paymentMethod: string;
+  paymentGateway: string;
+  transactionId: string;
+  paymentStatus: 'completed';
+  insuranceProvider: string;
+  policyNumber: string;
+  coverage: string;
+}
+
+export interface CreateInvoicePayload {
+  patientId: string;
+  appointmentId: string | null;
+  invoiceDate: string;
+  billItems: Array<{ itemType: string; description: string; quantity: number; unitPrice: number }>;
+  insurance: { insuranceProvider: string; policyNumber: string; coverage: string; claimAmount: number };
+  paymentDetails: { paymentMethod: string; paymentStatus: string };
+  status: 'issued';
+}
 
 export interface Medicine {
   _id: string;
