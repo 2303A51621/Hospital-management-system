@@ -1,0 +1,32 @@
+{
+  "name": "hospital-management-backend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "db:check": "node testConnection.js",
+    "seed:medical-knowledge": "node src/data/seedMedicalKnowledge.js",
+    "seed:wards": "node src/data/seedWards.js",
+    "seed:medicines": "node src/data/seedMedicines.js",
+    "doctors:24-hours": "node src/data/setAllDoctors24HourAvailability.js",
+    "photos:doctors": "node src/data/applyDoctorPhotos.js",
+    "migrate-local-to-atlas": "node scripts/migrate-local-to-atlas.js",
+    "push-local-to-atlas": "node scripts/push-local-to-atlas.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-validator": "^7.3.2",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.9.3",
+    "multer": "^2.5.0",
+    "node-cron": "^4.6.0",
+    "nodemailer": "^9.0.5",
+    "razorpay": "^2.9.6",
+    "uuid": "^14.0.2"
+  }
+}

@@ -1,0 +1,10 @@
+const EMR = require('../models/EMR');
+const Prescription = require('../models/Prescription');
+const { list, getById, create, updateById, asyncHandler } = require('./_helpers');
+exports.getEMRs = list(EMR, { filter: (req) => req.user.role === 'patient' ? { patientId: req.user._id } : {} });
+exports.getEMR = getById(EMR, { name: 'EMR' });
+exports.createEMR = create(EMR);
+exports.updateEMR = updateById(EMR, { name: 'EMR' });
+exports.getPatientEMRHistory = list(EMR, { filter: (req) => ({ patientId: req.params.patientId }) });
+exports.addPrescription = asyncHandler(async (req, res) => res.status(201).json({ success: true, data: await Prescription.create({ ...req.body, emrId: req.params.id }) }));
+exports.getEMRVersions = asyncHandler(async (req, res) => { const record = await EMR.findById(req.params.id); res.json({ success: true, data: record?.versions || [] }); });
