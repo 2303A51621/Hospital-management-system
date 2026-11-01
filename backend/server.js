@@ -12,8 +12,24 @@ dotenv.config({ path: path.resolve(__dirname, '.env.local') });
 
 const app = express();
 const port = Number(process.env.PORT || 5000);
+const configuredOrigins = (process.env.FRONTEND_URLS || process.env.FRONTEND_URL || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .map((origin) => origin.replace(/\/+$/, ''))
+  .filter(Boolean);
+const allowedOrigins = new Set([
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  ...configuredOrigins,
+]);
 
-app.use(cors({ origin: ['http://localhost:5173', 'http://127.0.0.1:5173'], credentials: true }));
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.has(origin)) return callback(null, true);
+    return callback(new Error('Origin is not allowed by the API CORS policy'));
+  },
+  credentials: true,
+}));
 app.post('/api/billing/webhook/razorpay', express.raw({ type: 'application/json' }), handleRazorpayWebhook);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
