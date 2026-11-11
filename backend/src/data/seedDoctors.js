@@ -1,6 +1,6 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const connectDB = require('../config/db');
+const { connectDB } = require('../config/db');
 const User = require('../models/User');
 const Doctor = require('../models/Doctor');
 const seedPassword = process.env.SEED_DOCTOR_PASSWORD || `Doctor@${new Date().getFullYear()}`;
