@@ -7,7 +7,7 @@
   },
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js",
+    "dev": "node --watch server.js",
     "db:check": "node testConnection.js",
     "seed:medical-knowledge": "node src/data/seedMedicalKnowledge.js",
     "seed:wards": "node src/data/seedWards.js",

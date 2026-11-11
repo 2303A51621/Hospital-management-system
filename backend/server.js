@@ -12,7 +12,8 @@ dotenv.config({ path: path.resolve(__dirname, '.env.local') });
 
 const app = express();
 const port = Number(process.env.PORT || 5000);
-const configuredOrigins = (process.env.FRONTEND_URLS || process.env.FRONTEND_URL || '')
+const host = '0.0.0.0';
+const configuredOrigins = (process.env.CLIENT_URL || process.env.FRONTEND_URLS || process.env.FRONTEND_URL || '')
   .split(',')
   .map((origin) => origin.trim())
   .map((origin) => origin.replace(/\/+$/, ''))
@@ -20,6 +21,8 @@ const configuredOrigins = (process.env.FRONTEND_URLS || process.env.FRONTEND_URL
 const allowedOrigins = new Set([
   'http://localhost:5173',
   'http://127.0.0.1:5173',
+  'http://localhost:5174',
+  'http://127.0.0.1:5174',
   ...configuredOrigins,
 ]);
 
@@ -35,7 +38,9 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-app.get('/api/health', (req, res) => res.json({ success: true, status: 'ok' }));
+const healthHandler = (req, res) => res.json({ success: true, status: 'ok' });
+app.get('/health', healthHandler);
+app.get('/api/health', healthHandler);
 app.use('/api/auth', require('./src/routes/authRoutes'));
 app.use('/api/patients', require('./src/routes/patientRoutes'));
 app.use('/api/doctors', require('./src/routes/doctorRoutes'));
@@ -54,7 +59,14 @@ app.use(errorHandler);
 
 const start = async () => {
   await connectDB();
-  app.listen(port, () => console.log(`Hospital backend running on http://localhost:${port}`));
+  const server = app.listen(port, host, () => {
+    console.log(`Hospital backend running on http://${host}:${port}`);
+  });
+  server.on('error', (error) => {
+    console.error('Backend server failed to listen:', error.message || error);
+    process.exitCode = 1;
+  });
+  return server;
 };
 
 if (require.main === module) {
