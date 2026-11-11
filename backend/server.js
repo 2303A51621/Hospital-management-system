@@ -13,26 +13,36 @@ dotenv.config({ path: path.resolve(__dirname, '.env.local') });
 const app = express();
 const port = Number(process.env.PORT || 5000);
 const host = '0.0.0.0';
-const configuredOrigins = (process.env.CLIENT_URL || process.env.FRONTEND_URLS || process.env.FRONTEND_URL || '')
-  .split(',')
+const configuredOrigins = [
+  process.env.CLIENT_URL,
+  process.env.FRONTEND_URL,
+  ...(process.env.FRONTEND_URLS || '').split(','),
+]
+  .filter(Boolean)
   .map((origin) => origin.trim())
   .map((origin) => origin.replace(/\/+$/, ''))
-  .filter(Boolean);
 const allowedOrigins = new Set([
   'http://localhost:5173',
   'http://127.0.0.1:5173',
   'http://localhost:5174',
   'http://127.0.0.1:5174',
+  'https://hospital-frontend-p92d.onrender.com',
   ...configuredOrigins,
 ]);
 
-app.use(cors({
+const corsOptions = {
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.has(origin)) return callback(null, true);
     return callback(new Error('Origin is not allowed by the API CORS policy'));
   },
   credentials: true,
-}));
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 app.post('/api/billing/webhook/razorpay', express.raw({ type: 'application/json' }), handleRazorpayWebhook);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
