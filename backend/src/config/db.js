@@ -32,8 +32,12 @@ const connectDB = async (uri = getAtlasMongoUri()) => {
 
   mongoose.set('strictQuery', true);
 
+  const parsedDb = getDatabaseNameFromUri(uri);
+  const targetDbName = (!parsedDb || parsedDb === 'test') ? 'kushal_hospitals' : parsedDb;
+
   try {
     await mongoose.connect(uri, {
+      dbName: targetDbName,
       serverSelectionTimeoutMS: 10000,
       connectTimeoutMS: 10000,
       retryWrites: true,
