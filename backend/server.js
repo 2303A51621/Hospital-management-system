@@ -38,9 +38,11 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-const healthHandler = (req, res) => res.json({ success: true, status: 'ok' });
-app.get('/health', healthHandler);
-app.get('/api/health', healthHandler);
+app.get('/health', (req, res) => res.json({
+  status: 'OK',
+  message: 'Hospital backend is running',
+}));
+app.get('/api/health', (req, res) => res.json({ success: true, status: 'ok' }));
 app.use('/api/auth', require('./src/routes/authRoutes'));
 app.use('/api/patients', require('./src/routes/patientRoutes'));
 app.use('/api/doctors', require('./src/routes/doctorRoutes'));
