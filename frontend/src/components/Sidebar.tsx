@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import { useUIStore } from '../store/uiStore';
 import KushalLogo from './KushalLogo';
 import {
   LayoutDashboard,
@@ -16,11 +17,14 @@ import {
   Settings,
   BedDouble,
   FileHeart,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 export default function Sidebar() {
   const location = useLocation();
   const user = useAuthStore((state) => state.user);
+  const { isSidebarOpen, closeSidebar, openSidebar } = useUIStore();
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -134,37 +138,67 @@ export default function Sidebar() {
   );
 
   return (
-    <aside className="relative z-20 flex h-screen w-64 shrink-0 flex-col overflow-y-auto border-r border-sky-100 bg-slate-900 text-white">
-      <div className="flex min-h-full flex-col">
-      <div className="p-4">
-        <KushalLogo size="sm" showText={false} />
-        <p className="text-xs uppercase tracking-wider text-slate-400 mt-2">Hospital Console</p>
-      </div>
+    <>
+      {!isSidebarOpen && (
+        <button
+          type="button"
+          onClick={openSidebar}
+          title="Open navigation"
+          aria-label="Open navigation"
+          className="fixed top-20 left-0 z-30 flex items-center gap-1.5 rounded-r-xl bg-slate-900 text-white px-2.5 py-2 shadow-lg border-y border-r border-slate-700 hover:bg-teal-700 transition group backdrop-blur"
+        >
+          <ChevronRight size={18} className="group-hover:translate-x-0.5 transition-transform text-teal-300" />
+          <span className="text-xs font-semibold pr-1">Menu</span>
+        </button>
+      )}
 
-      <nav className="space-y-2 px-4">
-        {visibleItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <Link
-              key={`${item.path}-${item.label}`}
-              to={item.path}
-              className={`flex items-center space-x-3 rounded-xl px-4 py-2.5 transition ${
-                isActive(item.path)
-                  ? 'bg-teal-700 text-white shadow'
-                  : 'text-slate-300 hover:bg-slate-800'
-              }`}
+      <aside
+        className={`relative z-20 flex h-screen shrink-0 flex-col border-r border-slate-800 bg-slate-900 text-white transition-all duration-300 ease-in-out ${
+          isSidebarOpen ? 'w-64 opacity-100' : 'w-0 opacity-0 overflow-hidden border-none pointer-events-none'
+        }`}
+      >
+        <div className="flex min-h-full w-64 flex-col overflow-y-auto">
+          <div className="flex items-center justify-between p-4 border-b border-slate-800">
+            <div>
+              <KushalLogo size="sm" showText={false} />
+              <p className="text-xs uppercase tracking-wider text-slate-400 mt-1">Hospital Console</p>
+            </div>
+            <button
+              type="button"
+              onClick={closeSidebar}
+              title="Close navigation"
+              aria-label="Close navigation"
+              className="flex items-center gap-1 rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition"
             >
-              <Icon size={20} />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+              <ChevronLeft size={20} />
+            </button>
+          </div>
 
-      <div className="mt-auto p-4 border-t border-slate-700">
-        <p className="text-xs text-slate-400">© 2026 Kushal Hospitals</p>
-      </div>
-      </div>
-    </aside>
+          <nav className="space-y-2 px-4 py-3">
+            {visibleItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={`${item.path}-${item.label}`}
+                  to={item.path}
+                  className={`flex items-center space-x-3 rounded-xl px-4 py-2.5 transition ${
+                    isActive(item.path)
+                      ? 'bg-teal-700 text-white shadow'
+                      : 'text-slate-300 hover:bg-slate-800'
+                  }`}
+                >
+                  <Icon size={20} />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="mt-auto p-4 border-t border-slate-800">
+            <p className="text-xs text-slate-400">© 2026 Kushal Hospitals</p>
+          </div>
+        </div>
+      </aside>
+    </>
   );
 }

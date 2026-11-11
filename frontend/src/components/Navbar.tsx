@@ -1,11 +1,13 @@
 import { useAuthStore } from '../store/authStore';
+import { useUIStore } from '../store/uiStore';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { LogOut } from 'lucide-react';
+import { LogOut, Menu, PanelLeftClose } from 'lucide-react';
 import KushalLogo from './KushalLogo';
 
 export default function Navbar() {
   const { user, logout } = useAuthStore();
+  const { isSidebarOpen, toggleSidebar } = useUIStore();
   const navigate = useNavigate();
   const displayName = user?.name || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'User';
 
@@ -19,7 +21,16 @@ export default function Navbar() {
     <nav className="border-b border-sky-100 bg-white/80 shadow-sm backdrop-blur">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              title={isSidebarOpen ? 'Close navigation' : 'Open navigation'}
+              aria-label={isSidebarOpen ? 'Close navigation' : 'Open navigation'}
+              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white p-2 text-slate-600 shadow-sm transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none"
+            >
+              {isSidebarOpen ? <PanelLeftClose size={19} /> : <Menu size={19} />}
+            </button>
             <KushalLogo size="md" showText={true} />
           </div>
 
