@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Toaster } from 'react-hot-toast';
 import { useAuthStore } from './store/authStore';
 import ProtectedRoute from './components/ProtectedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Standard Pages
 import LoginPage from './pages/LoginPage';
@@ -70,7 +71,8 @@ export default function App() {
       <Toaster position="top-right" />
       <EmergencyAmbulanceWidget />
       <AIChatbotWidget />
-      <Routes>
+      <ErrorBoundary>
+        <Routes>
         {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
         <Route
@@ -535,6 +537,7 @@ export default function App() {
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
+      </ErrorBoundary>
     </Router>
   );
 }

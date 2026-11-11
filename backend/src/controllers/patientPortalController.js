@@ -620,22 +620,26 @@ exports.getPatientBilling = asyncHandler(async (req, res) => {
     .sort({ invoiceDate: -1 });
 
   const totalPaid = billings
-    .filter((b) => b.paymentDetails?.paymentStatus === 'completed')
+    .filter((b) => b.paymentDetails?.paymentStatus === 'completed' || b.status === 'paid')
     .reduce((s, b) => s + (b.summary?.totalAmount || 0), 0);
 
-  const totalPending = billings
-    .filter((b) => b.paymentDetails?.paymentStatus === 'pending' || b.status === 'issued')
+  const totalOutstanding = billings
+    .filter((b) => b.paymentDetails?.paymentStatus === 'pending' || b.status === 'issued' || b.status === 'draft')
     .reduce((s, b) => s + (b.summary?.totalAmount || 0), 0);
+
+  const totalBilled = billings.reduce((s, b) => s + (b.summary?.totalAmount || 0), 0);
 
   res.json({
     success: true,
-    data: {
-      invoices: billings,
-      summary: {
-        totalPaid,
-        totalPending,
-        invoicesCount: billings.length,
-      },
+    count: billings.length,
+    data: billings,
+    invoices: billings,
+    summary: {
+      totalBilled,
+      totalPaid,
+      totalOutstanding,
+      totalPending: totalOutstanding,
+      invoicesCount: billings.length,
     },
   });
 });
@@ -647,12 +651,13 @@ exports.processOnlinePayment = asyncHandler(async (req, res) => {
   const billing = await Billing.findById(billingId);
   if (!billing) return res.status(404).json({ message: 'Invoice not found' });
 
-  if (billing.paymentDetails?.paymentStatus === 'completed') {
+  if (billing.paymentDetails?.paymentStatus === 'completed' || billing.status === 'paid') {
     return res.status(400).json({ message: 'Invoice has already been paid.' });
   }
 
   const generatedTxnId = transactionId || 'TXN-' + uuidv4().slice(0, 12).toUpperCase();
 
+  if (!billing.paymentDetails) billing.paymentDetails = {};
   billing.paymentDetails.paymentMethod = paymentMethod;
   billing.paymentDetails.transactionId = generatedTxnId;
   billing.paymentDetails.paymentStatus = 'completed';
@@ -660,6 +665,7 @@ exports.processOnlinePayment = asyncHandler(async (req, res) => {
   billing.paymentDetails.signatureVerified = true;
   billing.status = 'paid';
 
+  if (!billing.auditTrail) billing.auditTrail = [];
   billing.auditTrail.push({
     action: 'ONLINE_PAYMENT_VERIFIED',
     userId: req.user._id,
@@ -683,7 +689,7 @@ exports.processOnlinePayment = asyncHandler(async (req, res) => {
     userId: req.user._id,
     type: 'billing',
     title: 'Payment Confirmed',
-    message: `Payment of ₹${billing.summary?.totalAmount} (Txn: ${generatedTxnId}) was successfully processed.`,
+    message: `Payment of ₹${billing.summary?.totalAmount || 0} (Txn: ${generatedTxnId}) was successfully processed.`,
   });
 
   res.json({
