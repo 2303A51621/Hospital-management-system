@@ -45,7 +45,7 @@ services:
     staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
-        sync: false
+        value: https://hospital-backend-4aw2.onrender.com/api
     routes:
       - type: rewrite
         source: /*
