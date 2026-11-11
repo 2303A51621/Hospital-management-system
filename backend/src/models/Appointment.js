@@ -41,6 +41,7 @@ const appointmentSchema = new mongoose.Schema(
     consultationFee: {
       type: Number,
       required: true,
+      default: 500,
       min: 0,
     },
     billingId: {
@@ -50,7 +51,7 @@ const appointmentSchema = new mongoose.Schema(
     },
     consultationType: {
       type: String,
-      enum: ['in-person', 'telemedicine'],
+      enum: ['in-person', 'telemedicine', 'video', 'follow-up', 'emergency'],
       default: 'in-person',
     },
     status: {

@@ -330,6 +330,13 @@ exports.bookAppointment = asyncHandler(async (req, res) => {
   const endTime = req.body.endTime || `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
 
   const symptomsList = Array.isArray(symptoms) ? symptoms : [symptoms].filter(Boolean);
+  const consultationFee = Number(doctor.consultationFee || req.body.consultationFee || 500);
+
+  let cType = String(consultationType || req.body.type || 'in-person').toLowerCase();
+  if (cType === 'video') cType = 'telemedicine';
+  if (!['in-person', 'telemedicine', 'video', 'follow-up', 'emergency'].includes(cType)) {
+    cType = 'in-person';
+  }
 
   const appointment = await Appointment.create({
     patientId: patient._id,
@@ -341,7 +348,8 @@ exports.bookAppointment = asyncHandler(async (req, res) => {
     startTime: normalizedStart,
     timeSlot: rawTime,
     endTime,
-    consultationType: consultationType || req.body.type || 'in-person',
+    consultationFee,
+    consultationType: cType,
     reason: reason || 'Routine Clinical Consultation',
     symptoms: symptomsList,
     previousReports,
@@ -359,15 +367,15 @@ exports.bookAppointment = asyncHandler(async (req, res) => {
         itemType: 'consultation',
         description: `Consultation Fee with Dr. ${doctor.userId?.name || doctor.name} (${doctor.specialization})`,
         quantity: 1,
-        unitPrice: doctor.consultationFee || 500,
-        total: doctor.consultationFee || 500,
+        unitPrice: consultationFee,
+        total: consultationFee,
       },
     ],
     summary: {
-      subtotal: doctor.consultationFee || 500,
+      subtotal: consultationFee,
       gstRate: 0,
       gstAmount: 0,
-      totalAmount: doctor.consultationFee || 500,
+      totalAmount: consultationFee,
     },
     paymentDetails: {
       paymentMethod: paymentMethod === 'pay_at_hospital' ? 'pay_at_hospital' : 'upi',
@@ -375,6 +383,9 @@ exports.bookAppointment = asyncHandler(async (req, res) => {
     },
     status: 'issued',
   });
+
+  appointment.billingId = billing._id;
+  await appointment.save();
 
   const doctorName = doctor.userId?.name || `Dr. ${doctor.userId?.firstName || ''} ${doctor.userId?.lastName || ''}`.trim() || 'Clinician';
 

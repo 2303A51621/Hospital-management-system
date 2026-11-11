@@ -152,6 +152,7 @@ export default function PatientBookAppointmentPage() {
         timeSlot: activeSlot,
         type: consultationType,
         consultationType,
+        consultationFee: selectedDoctor?.consultationFee || 500,
         reason: activeReason,
         symptoms: symptomsList,
         medicalHistoryNotes: medicalNotes.trim(),
