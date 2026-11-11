@@ -28,6 +28,7 @@ exports.errorHandler = (err, req, res, next) => {
 // 404 handler
 exports.notFound = (req, res, next) => {
   const error = new Error(`Not Found - ${req.originalUrl}`);
+  error.status = 404;
   res.status(404);
   next(error);
 };

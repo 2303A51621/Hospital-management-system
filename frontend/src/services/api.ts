@@ -6,7 +6,10 @@ if (!configuredApiUrl) {
   throw new Error('VITE_API_URL must be configured before starting the frontend');
 }
 
-const API_URL = configuredApiUrl.replace(/\/+$/, '');
+let API_URL = configuredApiUrl.replace(/\/+$/, '');
+if (!API_URL.endsWith('/api')) {
+  API_URL += '/api';
+}
 
 const api = axios.create({
   baseURL: API_URL,
