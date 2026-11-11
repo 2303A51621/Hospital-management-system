@@ -140,7 +140,7 @@ export default function PatientFindDoctorsPage() {
                     </span>
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-300/20 px-3 py-1 font-bold text-teal-100 border border-teal-300/30 backdrop-blur-md">
                       <Clock size={13} className="text-teal-200" />
-                      12-Hour Staggered Shift Rotations (24/7 Coverage)
+                      24/7 Round-the-Clock Clinician Coverage (All 24 Hours)
                     </span>
                   </div>
                 </div>

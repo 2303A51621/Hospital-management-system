@@ -62,3 +62,4 @@ updateAllDoctors().catch((err) => {
   console.error('Update failed:', err);
   process.exit(1);
 });
+

@@ -12,20 +12,12 @@ export interface ShiftInfo {
 }
 
 export function formatDoctorShift(doctor: any): ShiftInfo {
-  let startTime = doctor?.availableSlots?.startTime || doctor?.availability?.[0]?.startTime;
-  let endTime = doctor?.availableSlots?.endTime || doctor?.availability?.[0]?.endTime;
+  let startTime = doctor?.availableSlots?.startTime || doctor?.availability?.[0]?.startTime || '00:00';
+  let endTime = doctor?.availableSlots?.endTime || doctor?.availability?.[0]?.endTime || '24:00';
   const slotDuration = doctor?.availableSlots?.slotDuration || 30;
 
-  if (!startTime || !endTime) {
-    const hash = String(doctor?._id || doctor?.licenseNumber || 'KH01')
-      .split('')
-      .reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
-    const shiftIndex = hash % 12;
-    const startHour = (6 + shiftIndex * 2) % 24;
-    const endHour = (startHour + 12) % 24;
-    startTime = `${String(startHour).padStart(2, '0')}:00`;
-    endTime = `${String(endHour).padStart(2, '0')}:00`;
-  }
+  const is24Hours = (startTime === '00:00' && (endTime === '24:00' || endTime === '00:00')) ||
+    (doctor?.availableDays && doctor.availableDays.length === 7);
 
   const toAmPm = (timeStr: string) => {
     if (!timeStr) return '';
@@ -39,13 +31,27 @@ export function formatDoctorShift(doctor: any): ShiftInfo {
     return `${String(displayHour).padStart(2, '0')}:${m} ${period}`;
   };
 
+  if (is24Hours) {
+    return {
+      startTime: '00:00',
+      endTime: '24:00',
+      formattedStart: '12:00 AM',
+      formattedEnd: '11:59 PM',
+      shiftRange: '24 Hours (Round-the-Clock)',
+      shiftTag: '24/7 Available',
+      shiftName: '24/7 Consultation',
+      daysBadge: 'Monday to Sunday (All 7 Days)',
+      hoursBadge: '24 Hours Daily',
+      slotDuration,
+    };
+  }
+
   const formattedStart = toAmPm(startTime);
   const formattedEnd = toAmPm(endTime);
-
   const startHour = parseInt(startTime.split(':')[0], 10);
+
   let shiftName = 'Day Shift';
   let shiftTag = '12h Shift';
-
   if (startHour >= 6 && startHour < 10) {
     shiftName = 'Morning Shift';
     shiftTag = 'Morning Shift (12h)';
@@ -84,8 +90,8 @@ export function generateDoctor12HourSlots(startTimeStr?: string, endTimeStr?: st
     return (h || 0) * 60 + (m || 0);
   };
 
-  let start = toMinutes(startTimeStr || '08:00');
-  let end = toMinutes(endTimeStr || '20:00');
+  let start = toMinutes(startTimeStr || '00:00');
+  let end = toMinutes(endTimeStr || '24:00');
   if (end <= start) {
     end += 1440;
   }
@@ -101,6 +107,22 @@ export function generateDoctor12HourSlots(startTimeStr?: string, endTimeStr?: st
     const curStartMin = t % 1440;
     const sh = Math.floor(curStartMin / 60);
     const sm = curStartMin % 60;
+    slots.push(toAmPm(sh, sm));
+  }
+  return slots;
+}
+
+export function generateDoctor24HourSlots(duration = 30): string[] {
+  const toAmPm = (h24: number, m: number) => {
+    const period = h24 >= 12 && h24 < 24 ? 'PM' : 'AM';
+    const displayHour = h24 % 12 === 0 ? 12 : h24 % 12;
+    return `${String(displayHour).padStart(2, '0')}:${String(m).padStart(2, '0')} ${period}`;
+  };
+
+  const slots: string[] = [];
+  for (let t = 0; t + duration <= 1440; t += duration) {
+    const sh = Math.floor(t / 60);
+    const sm = t % 60;
     slots.push(toAmPm(sh, sm));
   }
   return slots;

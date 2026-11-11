@@ -193,27 +193,10 @@ exports.getDoctorAvailableSlots = asyncHandler(async (req, res) => {
     });
   }
 
-  // 2. Determine base schedule for that day (12-hour shift)
-  const schedule = doctor.availability?.find((item) => item.day === dayName)
-    || (doctor.availableDays?.includes(dayName) ? doctor.availableSlots : null)
-    || doctor.availableSlots
-    || { startTime: '08:00', endTime: '20:00', slotDuration: 30 };
-
-  const startTimeStr = schedule.startTime || '08:00';
-  const endTimeStr = schedule.endTime || '20:00';
-  const duration = Number(schedule.slotDuration || 30);
-
-  const toMinutes = (timeStr) => {
-    if (!timeStr) return 0;
-    const [h, m] = String(timeStr).split(':').map(Number);
-    return (h || 0) * 60 + (m || 0);
-  };
-
-  let start = toMinutes(startTimeStr);
-  let end = toMinutes(endTimeStr);
-  if (end <= start) {
-    end += 1440; // 24h wrap for overnight shifts
-  }
+  // 2. Base schedule for doctor (24 hours round-the-clock availability)
+  const duration = Number(doctor.availableSlots?.slotDuration || 30);
+  const startTimeStr = '00:00';
+  const endTimeStr = '24:00';
 
   const toAmPm = (h24, m) => {
     const period = h24 >= 12 && h24 < 24 ? 'PM' : 'AM';
@@ -223,10 +206,9 @@ exports.getDoctorAvailableSlots = asyncHandler(async (req, res) => {
 
   const allSlots24 = [];
   const allSlotsAmPm = [];
-  for (let t = start; t + duration <= end; t += duration) {
-    const curStartMin = t % 1440;
-    const sh = Math.floor(curStartMin / 60);
-    const sm = curStartMin % 60;
+  for (let t = 0; t + duration <= 1440; t += duration) {
+    const sh = Math.floor(t / 60);
+    const sm = t % 60;
     const time24 = `${String(sh).padStart(2, '0')}:${String(sm).padStart(2, '0')}`;
     const timeAmPm = toAmPm(sh, sm);
     allSlots24.push(time24);
@@ -255,23 +237,13 @@ exports.getDoctorAvailableSlots = asyncHandler(async (req, res) => {
     }
   }
 
-  const formatAmPmStr = (timeStr) => {
-    if (!timeStr) return '';
-    const [h, m] = String(timeStr).split(':').map(Number);
-    const period = h >= 12 && h < 24 ? 'PM' : 'AM';
-    const dh = h % 12 === 0 ? 12 : h % 12;
-    return `${String(dh).padStart(2, '0')}:${String(m || 0).padStart(2, '0')} ${period}`;
-  };
-
-  const shiftTiming = `${formatAmPmStr(startTimeStr)} - ${formatAmPmStr(endTimeStr)}`;
-
   res.json({
     success: true,
     dayName,
     date,
-    doctorFee: doctor.consultationFee,
-    shiftHours: '12 Hours',
-    shiftTiming,
+    doctorFee: doctor.consultationFee || 500,
+    shiftHours: '24 Hours',
+    shiftTiming: '24 Hours Round-the-Clock',
     availableDays: doctor.availableDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
     availableSlots: availableSlotsAmPm,
     slots: availableSlotsAmPm,
@@ -281,12 +253,12 @@ exports.getDoctorAvailableSlots = asyncHandler(async (req, res) => {
       rawSlots: availableSlots24,
       day: dayName,
       date,
-      shiftHours: '12 Hours',
-      shiftTiming,
+      shiftHours: '24 Hours',
+      shiftTiming: '24 Hours Round-the-Clock',
       doctor: {
         _id: doctor._id,
         specialization: doctor.specialization,
-        consultationFee: doctor.consultationFee,
+        consultationFee: doctor.consultationFee || 500,
         availableSlots: doctor.availableSlots,
         availableDays: doctor.availableDays,
       },
@@ -301,21 +273,39 @@ exports.bookAppointment = asyncHandler(async (req, res) => {
   const {
     doctorId,
     appointmentDate,
-    startTime,
     consultationType = 'in-person',
-    reason,
+    reason = 'General consultation',
     symptoms = [],
     previousReports = [],
     familyMemberId,
     paymentMethod = 'upi',
   } = req.body;
 
-  if (!doctorId || !appointmentDate || !startTime) {
+  // Accept startTime from startTime, timeSlot, slot, or time
+  const rawTime = req.body.startTime || req.body.timeSlot || req.body.slot || req.body.time;
+
+  if (!doctorId || !appointmentDate || !rawTime) {
     return res.status(400).json({ message: 'Doctor, appointment date, and time slot are required' });
   }
 
   const doctor = await Doctor.findById(doctorId).populate('userId');
   if (!doctor) return res.status(404).json({ message: 'Doctor not found' });
+
+  // Normalize time string whether passed as 12-hour AM/PM or 24-hour HH:MM
+  let normalizedStart = String(rawTime).trim();
+  const ampmMatch = normalizedStart.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+  let startHour = 9;
+  let startMinute = 0;
+  if (ampmMatch) {
+    let hr = parseInt(ampmMatch[1], 10);
+    const min = parseInt(ampmMatch[2], 10);
+    const meridian = ampmMatch[3]?.toUpperCase();
+    if (meridian === 'PM' && hr < 12) hr += 12;
+    if (meridian === 'AM' && hr === 12) hr = 0;
+    startHour = hr;
+    startMinute = min;
+    normalizedStart = `${String(hr).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+  }
 
   // Prevent double booking for same doctor at same slot
   const dateStr = String(appointmentDate).slice(0, 10);
@@ -325,20 +315,19 @@ exports.bookAppointment = asyncHandler(async (req, res) => {
       $gte: new Date(dateStr + 'T00:00:00.000Z'),
       $lte: new Date(dateStr + 'T23:59:59.999Z'),
     },
-    startTime,
+    $or: [{ startTime: normalizedStart }, { startTime: rawTime }],
     status: { $nin: ['cancelled', 'rejected'] },
   });
 
   if (existing) {
-    return res.status(409).json({ message: 'Selected time slot is no longer available. Please pick another slot.' });
+    return res.status(409).json({ message: 'Selected time slot is already booked. Please pick another slot.' });
   }
 
-  // Calculate endTime (default 30 mins)
-  const [h, m] = startTime.split(':').map(Number);
-  const endMinutes = m + 30;
-  const endH = endMinutes >= 60 ? h + 1 : h;
-  const endM = endMinutes >= 60 ? endMinutes - 60 : endMinutes;
-  const endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+  // Calculate 30-min endTime
+  const endTotalMin = (startHour * 60 + startMinute + 30) % 1440;
+  const endH = Math.floor(endTotalMin / 60);
+  const endM = endTotalMin % 60;
+  const endTime = req.body.endTime || `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
 
   const symptomsList = Array.isArray(symptoms) ? symptoms : [symptoms].filter(Boolean);
 
@@ -348,9 +337,11 @@ exports.bookAppointment = asyncHandler(async (req, res) => {
     doctorId: doctor._id,
     department: doctor.department || doctor.specialization,
     appointmentDate: new Date(appointmentDate),
-    startTime,
+    date: new Date(appointmentDate),
+    startTime: normalizedStart,
+    timeSlot: rawTime,
     endTime,
-    consultationType,
+    consultationType: consultationType || req.body.type || 'in-person',
     reason: reason || 'Routine Clinical Consultation',
     symptoms: symptomsList,
     previousReports,
@@ -385,12 +376,14 @@ exports.bookAppointment = asyncHandler(async (req, res) => {
     status: 'issued',
   });
 
+  const doctorName = doctor.userId?.name || `Dr. ${doctor.userId?.firstName || ''} ${doctor.userId?.lastName || ''}`.trim() || 'Clinician';
+
   // Create notifications
   await Notification.create({
     userId: req.user._id,
     type: 'appointment-reminder',
     title: 'Appointment Request Submitted',
-    message: `Your booking request with Dr. ${doctor.userId?.name || doctor.name} on ${dateStr} at ${startTime} has been submitted.`,
+    message: `Your booking request with Dr. ${doctorName} on ${dateStr} at ${rawTime} has been submitted.`,
   });
 
   if (doctor.userId?._id) {
@@ -398,14 +391,29 @@ exports.bookAppointment = asyncHandler(async (req, res) => {
       userId: doctor.userId._id,
       type: 'system',
       title: 'New Appointment Booking Request',
-      message: `Patient ${patient.userId?.name || req.user.name} has requested an appointment on ${dateStr} at ${startTime}.`,
+      message: `Patient ${patient.userId?.name || req.user.name} has requested an appointment on ${dateStr} at ${rawTime}.`,
     });
   }
 
   res.status(201).json({
     success: true,
     message: 'Appointment successfully booked!',
-    data: { appointment, billing },
+    data: {
+      appointment,
+      billing,
+      appointmentId: appointment._id,
+      _id: appointment._id,
+      doctorName,
+      specialization: doctor.specialization,
+      department: doctor.department || doctor.specialization,
+      appointmentDate: appointment.appointmentDate,
+      date: dateStr,
+      startTime: normalizedStart,
+      timeSlot: rawTime,
+      endTime,
+      consultationFee: doctor.consultationFee || 500,
+      status: appointment.status,
+    },
   });
 });
 

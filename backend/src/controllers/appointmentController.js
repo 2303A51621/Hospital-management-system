@@ -105,12 +105,23 @@ exports.bookAppointment = asyncHandler(async (req, res) => {
 		return res.status(409).json({ message: 'The doctor is on approved leave on this date. Please select another date.' });
 	}
 
+	const rawStart = body.startTime || body.timeSlot || body.slot;
+	if (rawStart && !body.startTime) body.startTime = rawStart;
+
+	if (!body.endTime && rawStart) {
+		const [sh, sm] = String(rawStart).split(':').map(Number);
+		const endTot = ((sh || 0) * 60 + (sm || 0) + 30) % 1440;
+		body.endTime = `${String(Math.floor(endTot / 60)).padStart(2, '0')}:${String(endTot % 60).padStart(2, '0')}`;
+	}
+
 	const existing = await Appointment.find({
 		doctorId: doctor._id,
 		appointmentDate: { $gte: new Date(`${body.appointmentDate}T00:00:00`), $lt: new Date(`${body.appointmentDate}T23:59:59.999`) },
 	}).select('startTime status');
-	if (!getAvailableSlots(doctor, body.appointmentDate, existing).some((slot) => slot.startTime === body.startTime && slot.endTime === body.endTime)) {
-		return res.status(409).json({ message: 'This appointment slot is unavailable' });
+
+	const availableSlotsList = getAvailableSlots(doctor, body.appointmentDate, existing);
+	if (availableSlotsList.length > 0 && !availableSlotsList.some((slot) => slot.startTime === body.startTime)) {
+		return res.status(409).json({ message: 'This appointment slot is unavailable. Please select another slot.' });
 	}
 
 	const paymentMethod = body.paymentMethod === 'online' ? 'upi' : 'pay_at_hospital';

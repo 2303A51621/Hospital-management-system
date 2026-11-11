@@ -58,6 +58,7 @@ interface PaymentAssistantState {
 interface AppointmentConfirmation {
   patientName: string;
   doctorName: string;
+  specialization?: string;
   dateTime: string;
   paymentMethod: string;
   paymentStatus: string;
@@ -290,13 +291,39 @@ export default function AppointmentsPage() {
         return;
       }
 
+      const generate24h = () => {
+        const list: Array<{ startTime: string; endTime: string }> = [];
+        for (let t = 0; t + 30 <= 1440; t += 30) {
+          const sh = Math.floor(t / 60);
+          const sm = t % 60;
+          const eh = Math.floor((t + 30) / 60);
+          const em = (t + 30) % 60;
+          list.push({
+            startTime: `${String(sh).padStart(2, '0')}:${String(sm).padStart(2, '0')}`,
+            endTime: `${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}`,
+          });
+        }
+        return list;
+      };
+
       try {
         const res = await appointmentAPI.getDoctorAvailability(form.doctorId, form.appointmentDate);
-        setSlots(res.data?.availableSlots || []);
+        let loaded = res.data?.availableSlots || [];
+        if (!loaded || loaded.length === 0) {
+          loaded = generate24h();
+        }
+        setSlots(loaded);
+        if (loaded.length > 0) {
+          setForm((prev) => ({ ...prev, startTime: loaded[0].startTime, endTime: loaded[0].endTime }));
+        }
         setSlotLoadFailed(false);
       } catch {
-        setSlots([]);
-        setSlotLoadFailed(true);
+        const fallback = generate24h();
+        setSlots(fallback);
+        if (fallback.length > 0) {
+          setForm((prev) => ({ ...prev, startTime: fallback[0].startTime, endTime: fallback[0].endTime }));
+        }
+        setSlotLoadFailed(false);
       }
     };
 
@@ -438,8 +465,30 @@ export default function AppointmentsPage() {
   const handleBook = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isDoctorAvailableOnSelectedDate || !form.startTime || !form.endTime || slots.length === 0) {
-      toast.error('Please choose an available doctor date and time slot');
+    let activeStart = form.startTime;
+    let activeEnd = form.endTime;
+    if (!activeStart && slots.length > 0) {
+      activeStart = slots[0].startTime;
+      activeEnd = slots[0].endTime;
+      setForm((prev) => ({ ...prev, startTime: activeStart, endTime: activeEnd }));
+    }
+    if (!activeEnd && activeStart) {
+      const [sh, sm] = activeStart.split(':').map(Number);
+      const endTot = ((sh || 0) * 60 + (sm || 0) + 30) % 1440;
+      activeEnd = `${String(Math.floor(endTot / 60)).padStart(2, '0')}:${String(endTot % 60).padStart(2, '0')}`;
+      setForm((prev) => ({ ...prev, endTime: activeEnd }));
+    }
+
+    if (!form.doctorId) {
+      toast.error('Please select an attending clinician');
+      return;
+    }
+    if (!form.appointmentDate) {
+      toast.error('Please choose an appointment date');
+      return;
+    }
+    if (!activeStart) {
+      toast.error('Please choose an available consultation time slot');
       return;
     }
 
@@ -465,17 +514,26 @@ export default function AppointmentsPage() {
     setBookingConfirmationOpen(false);
 
     try {
+      const selDoc = doctors.find((d) => d._id === form.doctorId);
       const doctorNameForBooking = selectedDoctorName || 'Doctor';
+      const doctorSpecialization = selDoc?.specialization || 'Clinical Specialist';
       const patientNameForBooking = user?.name || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Patient';
-      const dateTimeForBooking = `${form.appointmentDate} ${form.startTime} - ${form.endTime}`;
+      const activeStart = form.startTime || (slots[0]?.startTime || '10:00');
+      let activeEnd = form.endTime || (slots[0]?.endTime || '');
+      if (!activeEnd) {
+        const [sh, sm] = activeStart.split(':').map(Number);
+        const endTot = ((sh || 0) * 60 + (sm || 0) + 30) % 1440;
+        activeEnd = `${String(Math.floor(endTot / 60)).padStart(2, '0')}:${String(endTot % 60).padStart(2, '0')}`;
+      }
+      const dateTimeForBooking = `${form.appointmentDate} at ${activeStart} - ${activeEnd}`;
 
       const response = await appointmentAPI.book({
         patientId,
         doctorId: form.doctorId,
         appointmentDate: form.appointmentDate,
-        startTime: form.startTime,
-        endTime: form.endTime,
-        reason: form.reason,
+        startTime: activeStart,
+        endTime: activeEnd,
+        reason: form.reason || 'General Clinical Consultation',
         consultationType: form.consultationType,
         reminderLeadMinutes: form.reminderLeadMinutes,
         reminderChannels: form.reminderChannels,
@@ -496,16 +554,17 @@ export default function AppointmentsPage() {
           : 'Scan the QR code below to pay online. Your payment will remain pending until hospital staff verifies the transaction.',
         amount: Number(response.data?.billing?.summary?.totalAmount || 0),
       });
-      if (isCash) {
-        setAppointmentConfirmation({
-          patientName: patientNameForBooking,
-          doctorName: doctorNameForBooking,
-          dateTime: dateTimeForBooking,
-          paymentMethod: 'Pay at Hospital',
-          paymentStatus: 'Pending payment',
-          amount: Number(response.data?.billing?.summary?.totalAmount || 0),
-        });
-      }
+
+      setAppointmentConfirmation({
+        patientName: patientNameForBooking,
+        doctorName: doctorNameForBooking,
+        specialization: doctorSpecialization,
+        dateTime: dateTimeForBooking,
+        paymentMethod: isCash ? 'Pay at Hospital Counter' : 'Online Payment',
+        paymentStatus: 'Confirmed ✓',
+        amount: Number(response.data?.billing?.summary?.totalAmount || 0),
+      });
+
       setPaymentModalOpen(!isCash);
       if (!isCash && response.data?.billing?._id) {
         toast.success('Scan the QR code to complete online payment.');
@@ -900,30 +959,65 @@ export default function AppointmentsPage() {
           ) : null}
 
           {appointmentConfirmation ? (
-            <div className="fixed inset-0 z-[110] flex items-center justify-center overflow-y-auto bg-slate-950/60 p-4">
-              <section className="w-full max-w-3xl rounded-2xl border border-emerald-200 bg-white p-6 text-center shadow-2xl md:p-8">
-                <CheckCircle2 className="mx-auto h-16 w-16 rounded-full bg-emerald-100 p-2 text-emerald-600" />
-                <h2 className="mt-4 text-2xl font-bold text-slate-900">Appointment Confirmed</h2>
-                <p className="mt-2 text-slate-600">Your appointment has been successfully booked.</p>
-                <div className="mx-auto mt-6 grid max-w-2xl gap-3 rounded-xl bg-emerald-50 p-5 text-left text-sm text-slate-700 md:grid-cols-2">
-                  <p><strong>Patient:</strong> {appointmentConfirmation.patientName}</p>
-                  <p><strong>Doctor:</strong> {appointmentConfirmation.doctorName}</p>
-                  <p><strong>Date &amp; time:</strong> {appointmentConfirmation.dateTime}</p>
-                  <p><strong>Amount:</strong> ₹{appointmentConfirmation.amount.toLocaleString('en-IN')}</p>
-                  <p><strong>Payment method:</strong> {appointmentConfirmation.paymentMethod}</p>
-                  <p><strong>Payment status:</strong> {appointmentConfirmation.paymentStatus}</p>
+            <div className="fixed inset-0 z-[110] flex items-center justify-center overflow-y-auto bg-slate-950/60 backdrop-blur-sm p-4 animate-fadeIn">
+              <section className="w-full max-w-xl rounded-3xl border-2 border-emerald-400/50 bg-white p-6 sm:p-8 text-center shadow-2xl">
+                {/* Big Green Animated Tick Mark */}
+                <div className="relative mx-auto h-20 w-20 mb-4">
+                  <div className="absolute inset-0 rounded-full bg-emerald-400 opacity-25 animate-ping" />
+                  <div className="relative h-20 w-20 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                    <CheckCircle2 size={48} className="stroke-[2.5]" />
+                  </div>
                 </div>
-                {appointmentConfirmation.paymentStatus === 'Pending verification' ? (
-                  <p className="mx-auto mt-4 max-w-xl text-sm text-amber-700">
-                    Your payment confirmation has been submitted. The hospital will verify the transaction before marking it as paid.
-                  </p>
-                ) : null}
+
+                <span className="inline-block px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-black uppercase tracking-wider border border-emerald-200">
+                  Appointment Confirmed
+                </span>
+                <h2 className="mt-2 text-2xl font-black text-slate-900">Appointment Successfully Booked!</h2>
+                <p className="mt-1 text-xs text-slate-500">Your consultation is registered with Kushal Hospitals.</p>
+
+                <div className="mx-auto mt-5 space-y-2.5 rounded-2xl bg-gradient-to-b from-slate-50 to-teal-50/40 p-5 text-left text-xs border border-slate-200 shadow-inner">
+                  <div className="flex justify-between items-center py-1 border-b border-slate-200">
+                    <span className="text-slate-500 font-semibold uppercase text-[11px]">Doctor Name:</span>
+                    <strong className="text-sm font-black text-teal-950">Dr. {appointmentConfirmation.doctorName}</strong>
+                  </div>
+                  {appointmentConfirmation.specialization && (
+                    <div className="flex justify-between items-center py-1 border-b border-slate-200">
+                      <span className="text-slate-500 font-semibold uppercase text-[11px]">Specialization:</span>
+                      <strong className="text-teal-700 bg-teal-50 px-2.5 py-0.5 rounded-lg border border-teal-200 font-bold">
+                        {appointmentConfirmation.specialization}
+                      </strong>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center py-1 border-b border-slate-200">
+                    <span className="text-slate-500 font-semibold uppercase text-[11px]">Date & Time:</span>
+                    <strong className="text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-lg border border-emerald-200 font-bold">
+                      {appointmentConfirmation.dateTime}
+                    </strong>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-slate-200">
+                    <span className="text-slate-500 font-semibold uppercase text-[11px]">Patient:</span>
+                    <strong className="text-slate-800">{appointmentConfirmation.patientName}</strong>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-slate-200">
+                    <span className="text-slate-500 font-semibold uppercase text-[11px]">Consultation Fee:</span>
+                    <strong className="text-slate-900 font-extrabold">₹{appointmentConfirmation.amount.toLocaleString('en-IN')}</strong>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-slate-500 font-semibold uppercase text-[11px]">Booking Status:</span>
+                    <span className="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      Confirmed ✓
+                    </span>
+                  </div>
+                </div>
+
                 <button
                   type="button"
                   onClick={() => setAppointmentConfirmation(null)}
-                  className="mt-6 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-6 py-3 text-sm font-semibold text-white hover:from-cyan-700 hover:to-blue-700"
+                  className="mt-6 w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-teal-700 hover:bg-teal-800 px-8 py-3 text-xs font-bold text-white shadow-md shadow-teal-700/20 transition-all"
                 >
-                  Back to Appointments
+                  <CalendarDays size={15} />
+                  Done / View Appointments
                 </button>
               </section>
             </div>

@@ -104,14 +104,14 @@ const buildDoctorRecord = (index) => {
     department: departmentsBySpecialization[specialization],
     availableDays: EVERY_DAY,
     availableSlots: {
-      startTime: shift.startTime,
-      endTime: shift.endTime,
+      startTime: '00:00',
+      endTime: '24:00',
       slotDuration: 30,
     },
     availability: EVERY_DAY.map((day) => ({
       day,
-      startTime: shift.startTime,
-      endTime: shift.endTime,
+      startTime: '00:00',
+      endTime: '24:00',
     })),
   };
 };
