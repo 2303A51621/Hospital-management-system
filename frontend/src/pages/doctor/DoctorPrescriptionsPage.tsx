@@ -715,12 +715,19 @@ export default function DoctorPrescriptionsPage() {
             <div className="p-8 space-y-6 text-slate-900 bg-white" id="printable-rx-sheet">
               {/* Header */}
               <div className="border-b-2 border-teal-600 pb-4 flex items-start justify-between">
-                <div>
-                  <h2 className="text-2xl font-black text-teal-800 tracking-tight">KUSHAL HOSPITALS</h2>
-                  <p className="text-xs text-slate-500 font-medium">
-                    Center for Clinical Excellence & Patient Care • NABH Accredited
-                  </p>
-                  <p className="text-[11px] text-slate-400">Emergency 24x7: +91 1800-KUSHAL-CARE | help@kushalhospitals.com</p>
+                <div className="flex items-center gap-3">
+                  <img
+                    src="/kushal-emblem.png"
+                    alt="Kushal Hospitals Logo"
+                    className="h-12 w-12 object-contain shrink-0"
+                  />
+                  <div>
+                    <h2 className="text-2xl font-black text-[#0f4c81] tracking-tight">KUSHAL HOSPITALS</h2>
+                    <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">
+                      Hospital Management System • NABH Accredited
+                    </p>
+                    <p className="text-[11px] text-slate-400">Emergency 24x7: +91 1800-KUSHAL-CARE | help@kushalhospitals.com</p>
+                  </div>
                 </div>
                 <div className="text-right">
                   <div className="text-xs font-bold text-slate-800">

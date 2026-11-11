@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { Copy, RefreshCw, UserPlus } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import FormInput from '../components/FormInput';
+import KushalLogo from '../components/KushalLogo';
 
 const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const lower = 'abcdefghijklmnopqrstuvwxyz';
@@ -108,7 +109,10 @@ export default function RegisterPage() {
             <UserPlus size={16} />
             New Account Setup
           </div>
-          <h1 className="mt-5 font-display text-4xl font-extrabold text-slate-900">Create your hospital workspace access</h1>
+          <div className="mt-5 mb-3">
+            <KushalLogo size="lg" showText={true} />
+          </div>
+          <h1 className="mt-3 font-display text-3xl font-extrabold text-slate-900">Create your hospital workspace access</h1>
           <p className="mt-4 text-slate-600">
             Register once, keep your profile synced, and access appointments and records with secure role-based access.
           </p>

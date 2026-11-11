@@ -57,3 +57,4 @@ const familyMemberSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model('FamilyMember', familyMemberSchema);
+

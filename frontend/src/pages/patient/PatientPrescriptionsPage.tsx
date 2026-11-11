@@ -154,13 +154,15 @@ export default function PatientPrescriptionsPage() {
                     {/* Sheet Header */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b-2 border-slate-900">
                       <div>
-                        <div className="flex items-center gap-2">
-                          <div className="h-9 w-9 rounded-xl bg-teal-800 text-white flex items-center justify-center font-black text-sm">
-                            KH
-                          </div>
+                        <div className="flex items-center gap-3">
+                          <img
+                            src="/kushal-emblem.png"
+                            alt="Kushal Hospitals"
+                            className="h-11 w-11 object-contain"
+                          />
                           <div>
-                            <h2 className="text-lg font-black tracking-tight text-slate-900 uppercase">Kushal Hospitals</h2>
-                            <p className="text-[10px] text-slate-500">NABH Accredited Multi-Speciality Medical Center</p>
+                            <h2 className="text-lg font-black tracking-tight text-[#0f4c81] uppercase">Kushal Hospitals</h2>
+                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Hospital Management System • NABH Accredited</p>
                           </div>
                         </div>
                       </div>
