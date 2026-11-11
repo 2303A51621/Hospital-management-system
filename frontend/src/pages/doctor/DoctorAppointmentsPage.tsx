@@ -18,6 +18,7 @@ import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import { appointmentAPI, doctorPortalAPI } from '../../services/api';
 import toast from 'react-hot-toast';
+import { toDateString } from '../../utils/dateUtils';
 
 export default function DoctorAppointmentsPage() {
   const [appointments, setAppointments] = useState<any[]>([]);
@@ -135,7 +136,7 @@ export default function DoctorAppointmentsPage() {
   const todayStr = now.toISOString().slice(0, 10);
 
   const filteredAppointments = appointments.filter((a) => {
-    const apptDate = (a.appointmentDate || a.date || '').slice(0, 10);
+    const apptDate = toDateString(a.appointmentDate || a.date);
     // Tab filtering
     if (activeTab === 'today' && apptDate !== todayStr) return false;
     if (activeTab === 'upcoming' && (apptDate <= todayStr || ['completed', 'cancelled'].includes(a.status))) return false;
@@ -333,7 +334,7 @@ export default function DoctorAppointmentsPage() {
                                     <button
                                       onClick={() => {
                                         setRescheduleModal(appt);
-                                        setNewDate((appt.appointmentDate || appt.date || '').slice(0, 10));
+                                        setNewDate(toDateString(appt.appointmentDate || appt.date));
                                       }}
                                       title="Reschedule"
                                       className="p-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition"

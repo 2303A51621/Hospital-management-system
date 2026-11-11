@@ -3,6 +3,7 @@ import { ArrowUpRight, BarChart3, CalendarDays, ChevronDown, CircleDollarSign, F
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import { appointmentAPI, doctorAPI, patientAPI, type Appointment, type Doctor } from '../services/api';
+import { toDateString } from '../utils/dateUtils';
 
 const money = (value: number) => `₹${value.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 const doctorName = (doctor?: Doctor) => doctor?.userId?.name || `${doctor?.userId?.firstName || ''} ${doctor?.userId?.lastName || ''}`.trim() || 'Specialist';
@@ -26,7 +27,7 @@ export default function AdminDashboardPage() {
 
   const pending = appointments.filter((item) => ['pending', 'scheduled', 'confirmed'].includes(item.status));
   const revenue = appointments.reduce((sum, item) => sum + Number(item.billing?.summary?.totalAmount || item.consultationFee || 0), 0);
-  const todayAppointments = appointments.filter((item) => (item.appointmentDate || item.date || '').slice(0, 10) === new Date().toISOString().slice(0, 10));
+  const todayAppointments = appointments.filter((item) => toDateString(item.appointmentDate || item.date) === new Date().toISOString().slice(0, 10));
   const maxDaily = Math.max(...[18, 31, 24, 42, 34, 52, 45, 37, 48, 41], 1);
   const dateLabel = useMemo(() => new Intl.DateTimeFormat('en-IN', { month: 'short', day: 'numeric' }).format(new Date()), []);
   const metricCards: Array<{ label: string; value: string | number; note: string; Icon: LucideIcon; color: string }> = [
@@ -92,7 +93,7 @@ export default function AdminDashboardPage() {
                       <div className="space-y-3">
                         {appointments.slice(0, 5).map((appointment) => (
                           <div key={appointment._id} className="grid grid-cols-[1fr_auto_auto] items-center gap-3 rounded-xl bg-slate-50 p-3 text-sm">
-                            <div><p className="font-semibold text-slate-800">{appointment.reason || 'General consultation'}</p><p className="text-xs text-slate-400">{appointment.appointmentDate?.slice(0, 10) || dateLabel} · {appointment.startTime}</p></div>
+                            <div><p className="font-semibold text-slate-800">{appointment.reason || 'General consultation'}</p><p className="text-xs text-slate-400">{toDateString(appointment.appointmentDate) || dateLabel} · {appointment.startTime}</p></div>
                             <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${appointment.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>{appointment.status}</span>
                             <ArrowUpRight size={16} className="text-slate-400" />
                           </div>

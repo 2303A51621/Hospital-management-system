@@ -15,6 +15,7 @@ import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import { patientPortalAPI } from '../../services/api';
 import toast from 'react-hot-toast';
+import { toDateString } from '../../utils/dateUtils';
 
 export default function PatientAppointmentsPage() {
   const [searchParams] = useSearchParams();
@@ -122,7 +123,7 @@ export default function PatientAppointmentsPage() {
   const todayStr = new Date().toISOString().split('T')[0];
 
   const filteredAppointments = appointments.filter((apt) => {
-    const aptDate = apt.appointmentDate ? new Date(apt.appointmentDate).toISOString().split('T')[0] : '';
+    const aptDate = toDateString(apt.appointmentDate || apt.date);
     const docUser = apt.doctorId?.userId || {};
     const docName = (docUser.name || `${docUser.firstName || ''} ${docUser.lastName || ''}`).toLowerCase();
     const matchesSearch = docName.includes(search.toLowerCase()) || (apt.reason || '').toLowerCase().includes(search.toLowerCase());
@@ -330,11 +331,11 @@ export default function PatientAppointmentsPage() {
                         {(apt.status === 'pending' || apt.status === 'confirmed') && (
                           <>
                             <button
-                              onClick={() => {
-                                setRescheduleApt(apt);
-                                setRescheduleDate(new Date(apt.appointmentDate).toISOString().split('T')[0]);
-                                setRescheduleSlot(apt.timeSlot || '');
-                              }}
+                                onClick={() => {
+                                  setRescheduleApt(apt);
+                                  setRescheduleDate(toDateString(apt.appointmentDate || apt.date));
+                                  setRescheduleSlot(apt.timeSlot || '');
+                                }}
                               className="px-3 py-1.5 rounded-xl border border-teal-200 bg-teal-50/50 hover:bg-teal-100 text-xs font-semibold text-teal-800"
                             >
                               Reschedule

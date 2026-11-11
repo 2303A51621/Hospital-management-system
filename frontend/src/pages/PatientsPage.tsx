@@ -3,6 +3,7 @@ import { CalendarDays, Mail, Phone, RefreshCw, Search, Users, User, ShieldCheck 
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import { appointmentAPI, patientAPI, type Appointment, type AuthUser, type PatientProfile } from '../services/api';
+import { toDateString } from '../utils/dateUtils';
 
 const userDetails = (patient: PatientProfile) => {
   const user = typeof patient.userId === 'string' ? undefined : patient.userId as AuthUser;
@@ -213,7 +214,7 @@ export default function PatientsPage() {
                                     {doctorName ? `Dr. ${doctorName}` : 'Attending Clinician'}
                                   </p>
                                   <p className="text-[11px] text-slate-500 mt-0.5">
-                                    {latest.appointmentDate?.slice(0, 10)} • {latest.startTime}
+                                    {toDateString(latest.appointmentDate)} • {latest.startTime}
                                   </p>
                                   <span
                                     className={`mt-1.5 inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${appointmentStatusClass(

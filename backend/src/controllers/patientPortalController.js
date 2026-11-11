@@ -27,6 +27,20 @@ const getPatientForUser = async (userId, userDetails = {}) => {
   return patient;
 };
 
+// Safe conversion of any Date, string, or timestamp into YYYY-MM-DD
+const toDateString = (dateVal) => {
+  if (!dateVal) return '';
+  if (typeof dateVal === 'string') return dateVal.slice(0, 10);
+  if (dateVal instanceof Date && !isNaN(dateVal.getTime())) {
+    return dateVal.toISOString().slice(0, 10);
+  }
+  try {
+    const d = new Date(dateVal);
+    if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+  } catch (e) {}
+  return String(dateVal || '').slice(0, 10);
+};
+
 // 1. PATIENT DASHBOARD
 exports.getPatientDashboard = asyncHandler(async (req, res) => {
   const patient = await getPatientForUser(req.user._id, req.user);
@@ -68,7 +82,7 @@ exports.getPatientDashboard = asyncHandler(async (req, res) => {
   const todayStr = now.toISOString().slice(0, 10);
 
   const upcomingAppointments = allAppointments.filter((a) => {
-    const dStr = (a.appointmentDate || a.date || '').slice(0, 10);
+    const dStr = toDateString(a.appointmentDate || a.date);
     return ['pending', 'scheduled', 'confirmed'].includes(a.status) && dStr >= todayStr;
   });
 
@@ -444,14 +458,14 @@ exports.getPatientAppointments = asyncHandler(async (req, res) => {
   const nowStr = new Date().toISOString().slice(0, 10);
 
   if (tab === 'today') {
-    appointments = appointments.filter((a) => (a.appointmentDate || a.date || '').slice(0, 10) === nowStr);
+    appointments = appointments.filter((a) => toDateString(a.appointmentDate || a.date) === nowStr);
   } else if (tab === 'upcoming') {
     appointments = appointments.filter((a) => {
-      const d = (a.appointmentDate || a.date || '').slice(0, 10);
+      const d = toDateString(a.appointmentDate || a.date);
       return ['pending', 'confirmed', 'scheduled'].includes(a.status) && d >= nowStr;
     });
   } else if (tab === 'past') {
-    appointments = appointments.filter((a) => a.status === 'completed' || (a.appointmentDate || '').slice(0, 10) < nowStr);
+    appointments = appointments.filter((a) => a.status === 'completed' || toDateString(a.appointmentDate || a.date) < nowStr);
   } else if (tab === 'cancelled') {
     appointments = appointments.filter((a) => a.status === 'cancelled' || a.status === 'rejected');
   } else if (tab === 'pending') {
