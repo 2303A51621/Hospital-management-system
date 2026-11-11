@@ -185,10 +185,12 @@ export default function EmergencyAmbulanceWidget() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-[70] flex items-center gap-2 rounded-full bg-red-600 px-5 py-3 font-bold text-white shadow-2xl ring-4 ring-red-200 transition hover:bg-red-700"
+        className="fixed bottom-6 right-6 z-[70] flex items-center gap-2.5 rounded-full bg-gradient-to-r from-red-600 via-rose-600 to-red-600 px-5 py-3 font-extrabold text-white shadow-xl shadow-red-600/35 ring-4 ring-red-200/50 transition-all duration-200 hover:scale-105 hover:shadow-red-600/50 active:scale-95"
       >
-        <AlertTriangle size={18} />
-        Emergency Ambulance
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20">
+          <AlertTriangle size={15} className="animate-bounce text-white" />
+        </span>
+        <span className="text-xs uppercase tracking-wider font-extrabold">Emergency Ambulance</span>
       </button>
 
       {open ? (

@@ -962,3 +962,4 @@ exports.updateDoctorProfile = asyncHandler(async (req, res) => {
 
   res.json({ success: true, data: updatedDoctor, message: 'Doctor profile updated' });
 });
+

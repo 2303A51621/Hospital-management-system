@@ -114,7 +114,7 @@ export default function DoctorPatientsPage() {
   };
 
   return (
-    <div className="flex h-screen bg-[#f1f5f9] text-slate-800">
+    <div className="flex h-screen bg-[#f8fafc] text-slate-900">
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Navbar />

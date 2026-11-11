@@ -98,3 +98,4 @@ router.get('/profile', logActivity('doctor', 'view'), getDoctorProfile);
 router.put('/profile', logActivity('doctor', 'update'), updateDoctorProfile);
 
 module.exports = router;
+

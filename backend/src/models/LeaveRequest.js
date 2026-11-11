@@ -45,3 +45,4 @@ const leaveRequestSchema = new mongoose.Schema(
 leaveRequestSchema.index({ doctorId: 1, startDate: 1, endDate: 1 });
 
 module.exports = mongoose.model('LeaveRequest', leaveRequestSchema);
+

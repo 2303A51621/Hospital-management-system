@@ -50,11 +50,21 @@ export default function AIChatbotWidget() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed right-5 top-[76px] z-[70] flex items-center gap-3 rounded-2xl border border-cyan-100 bg-white/95 px-3 py-2.5 text-left shadow-lg backdrop-blur transition hover:-translate-y-0.5 hover:shadow-xl"
+        className="fixed right-6 bottom-24 z-[70] flex items-center gap-2.5 rounded-full border border-teal-200/90 bg-white/95 pl-2.5 pr-4 py-2 text-left shadow-xl shadow-teal-950/10 backdrop-blur-md transition-all hover:-translate-y-1 hover:shadow-2xl hover:border-teal-400 group ring-2 ring-teal-500/10"
         aria-label="Open hospital AI assistant"
       >
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-600 to-teal-700 text-white shadow-inner"><Bot size={21} /></span>
-        <span className="pr-1"><span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-teal-700">I can assist you</span><span className="block text-sm font-extrabold text-slate-900">May I help you?</span></span>
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-teal-600 to-cyan-600 text-white shadow-md group-hover:scale-105 transition-transform">
+          <Bot size={19} />
+        </span>
+        <span className="leading-tight">
+          <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-teal-700">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            AI Clinical Guide
+          </span>
+          <span className="block text-xs font-extrabold text-slate-800">
+            Ask Kushal AI
+          </span>
+        </span>
       </button>
 
       {open ? (

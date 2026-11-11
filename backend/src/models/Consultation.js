@@ -78,3 +78,4 @@ consultationSchema.index({ doctorId: 1, visitDate: -1 });
 consultationSchema.index({ patientId: 1, visitDate: -1 });
 
 module.exports = mongoose.model('Consultation', consultationSchema);
+

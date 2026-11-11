@@ -51,3 +51,4 @@ referralSchema.index({ referredDoctorId: 1, createdAt: -1 });
 referralSchema.index({ patientId: 1 });
 
 module.exports = mongoose.model('Referral', referralSchema);
+

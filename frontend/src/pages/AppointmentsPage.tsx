@@ -577,40 +577,40 @@ export default function AppointmentsPage() {
   };
 
   return (
-    <div className="flex h-screen bg-[#edf6ff]">
+    <div className="flex h-screen bg-[#f8fafc] text-slate-800">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar />
-        <main className="relative flex-1 overflow-auto p-4 md:p-6">
-          <div className="pointer-events-none absolute -top-20 -right-16 h-72 w-72 rounded-full bg-cyan-200/40 blur-3xl" />
-          <div className="pointer-events-none absolute top-44 -left-20 h-72 w-72 rounded-full bg-blue-200/40 blur-3xl" />
+        <main className="relative flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
+          <div className="pointer-events-none absolute -top-20 -right-16 h-72 w-72 rounded-full bg-teal-200/20 blur-3xl" />
+          <div className="pointer-events-none absolute top-44 -left-20 h-72 w-72 rounded-full bg-cyan-200/20 blur-3xl" />
 
-          <section className="relative z-10 mb-6 rounded-2xl border border-cyan-100 bg-gradient-to-r from-[#0f6ba8] via-[#0a7ebd] to-[#14a3c7] p-6 text-white shadow-lg">
+          <section className="relative z-10 mb-6 rounded-3xl border border-teal-800/30 bg-gradient-to-r from-[#0b3d4f] via-[#0d5c75] to-[#0f766e] p-6 sm:p-8 text-white shadow-xl shadow-teal-950/10">
             <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-xs font-medium tracking-wide">
-                  <ShieldCheck size={14} /> Patient Care Scheduler
+                <p className="mb-2.5 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur-md border border-white/20 text-teal-100">
+                  <ShieldCheck size={14} className="text-teal-300" /> Patient Care Scheduler
                 </p>
-                <h1 className="text-3xl font-bold tracking-tight">Appointments</h1>
-                <p className="mt-2 max-w-xl text-sm text-cyan-50">
-                  Manage bookings, receive timely reminders, and join secure online consultations in one place.
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight">Appointments</h1>
+                <p className="mt-2 max-w-xl text-sm text-teal-100/90 leading-relaxed">
+                  Manage bookings, receive timely clinical reminders, and join secure telemedicine consultations in one place.
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="rounded-xl bg-white/15 px-4 py-3 backdrop-blur-sm">
-                  <p className="text-cyan-100">Total Appointments</p>
-                  <p className="text-lg font-semibold">{appointments.length}</p>
+                <div className="rounded-2xl bg-white/15 px-4 py-3 backdrop-blur-md border border-white/20 text-center min-w-[120px]">
+                  <p className="text-xs text-teal-200 font-semibold uppercase tracking-wider">Total Visits</p>
+                  <p className="text-xl font-bold text-white mt-0.5">{appointments.length}</p>
                 </div>
-                <div className="rounded-xl bg-white/15 px-4 py-3 backdrop-blur-sm">
-                  <p className="text-cyan-100">Unread Alerts</p>
-                  <p className="text-lg font-semibold">{unreadCount}</p>
+                <div className="rounded-2xl bg-white/15 px-4 py-3 backdrop-blur-md border border-white/20 text-center min-w-[120px]">
+                  <p className="text-xs text-teal-200 font-semibold uppercase tracking-wider">Unread Alerts</p>
+                  <p className="text-xl font-bold text-white mt-0.5">{unreadCount}</p>
                 </div>
               </div>
             </div>
           </section>
 
-          <div className="relative z-10 rounded-2xl border border-cyan-100 bg-white/90 shadow-sm p-6 mb-6 backdrop-blur">
+          <div className="relative z-10 rounded-2xl border border-slate-200/80 bg-white shadow-clinical p-6 mb-6">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-xl font-semibold text-slate-800 inline-flex items-center gap-2">
                 <BellRing size={18} className="text-cyan-700" /> Notifications

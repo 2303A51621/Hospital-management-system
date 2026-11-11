@@ -47,3 +47,4 @@ messageSchema.index({ receiverId: 1, isRead: 1, createdAt: -1 });
 messageSchema.index({ senderId: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Message', messageSchema);
+

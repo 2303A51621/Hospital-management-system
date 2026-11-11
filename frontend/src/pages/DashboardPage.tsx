@@ -276,37 +276,36 @@ export default function DashboardPage() { // NOSONAR
   };
 
   return (
-    <div className="flex h-screen bg-[#edf6ff]">
+    <div className="flex h-screen bg-[#f8fafc] text-slate-800">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Navbar />
-        <main className="relative flex-1 overflow-auto p-4 md:p-8">
-          <div className="dashboard-bg-image absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30" />
-          <div className="absolute inset-0 bg-[#edf6ff]/78" />
-          <div className="pointer-events-none absolute -top-16 -right-12 h-72 w-72 rounded-full bg-cyan-200/40 blur-3xl" />
-          <div className="pointer-events-none absolute top-56 -left-20 h-72 w-72 rounded-full bg-blue-200/35 blur-3xl" />
+        <main className="relative flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
+          <div className="dashboard-bg-image absolute inset-0 bg-cover bg-center bg-no-repeat opacity-10" />
+          <div className="pointer-events-none absolute -top-16 -right-12 h-72 w-72 rounded-full bg-teal-200/20 blur-3xl" />
+          <div className="pointer-events-none absolute top-56 -left-20 h-72 w-72 rounded-full bg-cyan-200/20 blur-3xl" />
 
-          <div className="relative z-10">
-            <section className="mb-6 rounded-2xl border border-cyan-100 bg-gradient-to-r from-[#0f6ba8] via-[#0a7ebd] to-[#14a3c7] p-6 text-white shadow-lg">
+          <div className="relative z-10 max-w-7xl mx-auto space-y-6">
+            <section className="rounded-3xl border border-teal-800/30 bg-gradient-to-r from-[#0b3d4f] via-[#0d5c75] to-[#0f766e] p-6 sm:p-8 text-white shadow-xl shadow-teal-950/10">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-xs font-medium tracking-wide">
-                    <ClipboardList size={14} /> Care Operations Center
+                  <p className="mb-2.5 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold backdrop-blur-md border border-white/20 text-teal-100">
+                    <ClipboardList size={14} className="text-teal-300" /> Care Operations Center
                   </p>
-                  <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-                  <p className="mt-2 text-sm text-cyan-50">
-                    Welcome, {displayName}. Role: <span className="font-semibold capitalize">{user?.role}</span>
+                  <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">Clinical Dashboard</h1>
+                  <p className="mt-1 text-sm text-teal-100/90">
+                    Welcome back, <strong className="text-white font-bold">{displayName}</strong> • Role: <span className="font-semibold uppercase tracking-wider text-xs px-2 py-0.5 rounded bg-white/20">{user?.role}</span>
                   </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-xl bg-white/15 px-4 py-3 backdrop-blur-sm">
-                    <p className="text-cyan-100">Today</p>
-                    <p className="text-lg font-semibold">{stats.todayAppointments} appointments</p>
+                  <div className="rounded-2xl bg-white/15 px-4 py-3 backdrop-blur-md border border-white/20 text-center min-w-[120px]">
+                    <p className="text-xs text-teal-200 font-semibold uppercase tracking-wider">Today's Visits</p>
+                    <p className="text-xl font-bold text-white mt-0.5">{stats.todayAppointments}</p>
                   </div>
-                  <div className="rounded-xl bg-white/15 px-4 py-3 backdrop-blur-sm">
-                    <p className="text-cyan-100">Unread</p>
-                    <p className="text-lg font-semibold">{unreadNotifications} alerts</p>
+                  <div className="rounded-2xl bg-white/15 px-4 py-3 backdrop-blur-md border border-white/20 text-center min-w-[120px]">
+                    <p className="text-xs text-teal-200 font-semibold uppercase tracking-wider">Active Alerts</p>
+                    <p className="text-xl font-bold text-white mt-0.5">{unreadNotifications}</p>
                   </div>
                 </div>
               </div>
