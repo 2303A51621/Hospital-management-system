@@ -26,6 +26,11 @@ import {
   CalendarDays,
   LogOut,
   PhoneCall,
+  CalendarPlus,
+  Clock,
+  Video,
+  Star,
+  Sparkles,
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -69,6 +74,48 @@ export default function Sidebar() {
       items: [
         { path: '/doctor/profile', label: 'My Profile', icon: User },
         { path: '/doctor/settings', label: 'Settings', icon: Settings },
+      ],
+    },
+  ];
+
+  // Section 20: Exact 18 Patient Portal Sidebar Menu Items
+  const patientMenuItems = [
+    {
+      group: 'CLINICAL CARE',
+      items: [
+        { path: '/patient/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { path: '/patient/doctors', label: 'Find Doctors', icon: Stethoscope },
+        { path: '/patient/book-appointment', label: 'Book Appointment', icon: CalendarPlus },
+        { path: '/patient/appointments', label: 'My Appointments', icon: Calendar },
+        { path: '/patient/telemedicine', label: 'Online Consultation', icon: Video },
+        { path: '/patient/follow-ups', label: 'Follow-ups', icon: Clock },
+      ],
+    },
+    {
+      group: 'HEALTH RECORDS',
+      items: [
+        { path: '/patient/records', label: 'Medical Records', icon: FileHeart },
+        { path: '/patient/prescriptions', label: 'Prescriptions', icon: Pill },
+        { path: '/patient/reports', label: 'Medical Reports', icon: FlaskConical },
+        { path: '/patient/health-overview', label: 'Health Overview', icon: BarChart3 },
+      ],
+    },
+    {
+      group: 'FINANCIAL & FAMILY',
+      items: [
+        { path: '/patient/payments', label: 'Payments & Invoices', icon: CreditCard },
+        { path: '/patient/family', label: 'Family Members', icon: Users },
+        { path: '/patient/messages', label: 'Messages', icon: MessageSquare },
+      ],
+    },
+    {
+      group: 'SUPPORT & ACCOUNT',
+      items: [
+        { path: '/patient/feedback', label: 'Feedback & Reviews', icon: Star },
+        { path: '/patient/health-tips', label: 'Health Tips', icon: Sparkles },
+        { path: '/patient/emergency', label: 'Emergency Support', icon: PhoneCall },
+        { path: '/patient/profile', label: 'My Profile', icon: User },
+        { path: '/patient/settings', label: 'Settings', icon: Settings },
       ],
     },
   ];
@@ -168,6 +215,7 @@ export default function Sidebar() {
   ];
 
   const isDoctor = user?.role === 'doctor';
+  const isPatient = user?.role === 'patient';
   const visibleStandardItems = standardMenuItems.filter((item) =>
     item.roles.includes(user?.role || '')
   );
@@ -212,7 +260,7 @@ export default function Sidebar() {
             <div className="mt-2.5 flex items-center justify-between px-1">
               <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-teal-300 bg-teal-900/40 border border-teal-700/50 px-2 py-0.5 rounded-md">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                {isDoctor ? 'Doctor Portal' : 'Hospital Console'}
+                {isDoctor ? 'Doctor Portal' : isPatient ? 'Patient Portal' : 'Hospital Console'}
               </span>
               <span className="text-[10px] font-mono text-slate-400">NABH A+</span>
             </div>
@@ -256,7 +304,55 @@ export default function Sidebar() {
                   </div>
                 ))}
 
-                {/* 14. Logout Button */}
+                {/* Logout Button */}
+                <div className="pt-2 border-t border-[#173860]">
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="w-full flex items-center space-x-3 rounded-xl px-3.5 py-2 text-xs font-semibold text-rose-300 hover:bg-rose-500/20 hover:text-rose-100 transition text-left"
+                  >
+                    <LogOut size={17} className="shrink-0 text-rose-400" />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              </>
+            ) : isPatient ? (
+              <>
+                {patientMenuItems.map((section) => (
+                  <div key={section.group} className="space-y-1">
+                    <div className="px-3 pt-2 pb-1 text-[10px] font-extrabold uppercase tracking-widest text-slate-400/90">
+                      {section.group}
+                    </div>
+                    {section.items.map((item) => {
+                      const Icon = item.icon;
+                      const active = isActive(item.path);
+                      return (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          className={`flex items-center space-x-3 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all duration-200 group ${
+                            active
+                              ? 'bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg shadow-teal-500/25 ring-1 ring-teal-300/30'
+                              : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                          }`}
+                        >
+                          <Icon
+                            size={17}
+                            className={`shrink-0 transition-transform group-hover:scale-110 ${
+                              active ? 'text-white' : 'text-teal-400 group-hover:text-teal-300'
+                            }`}
+                          />
+                          <span className="truncate">{item.label}</span>
+                          {active && (
+                            <span className="ml-auto h-1.5 w-1.5 rounded-full bg-white shadow-sm" />
+                          )}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ))}
+
+                {/* Patient Logout Button */}
                 <div className="pt-2 border-t border-[#173860]">
                   <button
                     type="button"

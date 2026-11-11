@@ -4,6 +4,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const dotenv = require('dotenv');
 const { connectDB } = require('./src/config/db');
+require('./src/models/index'); // Pre-load all schemas into Mongoose before routing
 const { notFound, errorHandler } = require('./src/middleware/errorHandler');
 const { handleRazorpayWebhook } = require('./src/controllers/billingController');
 
@@ -66,6 +67,7 @@ app.use('/api/notifications', require('./src/routes/notificationRoutes'));
 app.use('/api/emergency', require('./src/routes/emergencyRoutes'));
 app.use('/api/ai/chat', require('./src/routes/aiChatRoutes'));
 app.use('/api/doctor-portal', require('./src/routes/doctorPortalRoutes'));
+app.use('/api/patient-portal', require('./src/routes/patientPortalRoutes'));
 
 app.use(notFound);
 app.use(errorHandler);

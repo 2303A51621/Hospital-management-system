@@ -41,6 +41,26 @@ import DoctorAnalyticsPage from './pages/doctor/DoctorAnalyticsPage';
 import DoctorProfilePage from './pages/doctor/DoctorProfilePage';
 import DoctorSettingsPage from './pages/doctor/DoctorSettingsPage';
 
+// Patient Role Module Pages
+import PatientDashboardPage from './pages/patient/PatientDashboardPage';
+import PatientFindDoctorsPage from './pages/patient/PatientFindDoctorsPage';
+import PatientBookAppointmentPage from './pages/patient/PatientBookAppointmentPage';
+import PatientAppointmentsPage from './pages/patient/PatientAppointmentsPage';
+import PatientMedicalRecordsPage from './pages/patient/PatientMedicalRecordsPage';
+import PatientPrescriptionsPage from './pages/patient/PatientPrescriptionsPage';
+import PatientMedicalReportsPage from './pages/patient/PatientMedicalReportsPage';
+import PatientPaymentsPage from './pages/patient/PatientPaymentsPage';
+import PatientTelemedicinePage from './pages/patient/PatientTelemedicinePage';
+import PatientMessagesPage from './pages/patient/PatientMessagesPage';
+import PatientFollowUpsPage from './pages/patient/PatientFollowUpsPage';
+import PatientFamilyPage from './pages/patient/PatientFamilyPage';
+import PatientFeedbackPage from './pages/patient/PatientFeedbackPage';
+import PatientHealthTipsPage from './pages/patient/PatientHealthTipsPage';
+import PatientEmergencyPage from './pages/patient/PatientEmergencyPage';
+import PatientProfilePage from './pages/patient/PatientProfilePage';
+import PatientHealthOverviewPage from './pages/patient/PatientHealthOverviewPage';
+import PatientSettingsPage from './pages/patient/PatientSettingsPage';
+
 export default function App() {
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
@@ -105,6 +125,8 @@ export default function App() {
                 <AdminDashboardPage />
               ) : user?.role === 'doctor' ? (
                 <DoctorDashboardPage />
+              ) : user?.role === 'patient' ? (
+                <PatientDashboardPage />
               ) : (
                 <DashboardPage />
               )}
@@ -214,6 +236,152 @@ export default function App() {
           element={
             <ProtectedRoute requiredRoles={['doctor', 'admin', 'super_admin']}>
               <DoctorSettingsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Section 20: Dedicated Patient Portal Routes */}
+        <Route
+          path="/patient/dashboard"
+          element={
+            <ProtectedRoute requiredRoles={['patient', 'admin', 'super_admin']}>
+              <PatientDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient/doctors"
+          element={
+            <ProtectedRoute requiredRoles={['patient', 'admin', 'super_admin']}>
+              <PatientFindDoctorsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient/book-appointment"
+          element={
+            <ProtectedRoute requiredRoles={['patient', 'admin', 'super_admin']}>
+              <PatientBookAppointmentPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient/appointments"
+          element={
+            <ProtectedRoute requiredRoles={['patient', 'admin', 'super_admin']}>
+              <PatientAppointmentsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient/records"
+          element={
+            <ProtectedRoute requiredRoles={['patient', 'admin', 'super_admin']}>
+              <PatientMedicalRecordsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient/prescriptions"
+          element={
+            <ProtectedRoute requiredRoles={['patient', 'admin', 'super_admin']}>
+              <PatientPrescriptionsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient/reports"
+          element={
+            <ProtectedRoute requiredRoles={['patient', 'admin', 'super_admin']}>
+              <PatientMedicalReportsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient/payments"
+          element={
+            <ProtectedRoute requiredRoles={['patient', 'admin', 'super_admin']}>
+              <PatientPaymentsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient/telemedicine"
+          element={
+            <ProtectedRoute requiredRoles={['patient', 'admin', 'super_admin']}>
+              <PatientTelemedicinePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient/messages"
+          element={
+            <ProtectedRoute requiredRoles={['patient', 'admin', 'super_admin']}>
+              <PatientMessagesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient/follow-ups"
+          element={
+            <ProtectedRoute requiredRoles={['patient', 'admin', 'super_admin']}>
+              <PatientFollowUpsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient/family"
+          element={
+            <ProtectedRoute requiredRoles={['patient', 'admin', 'super_admin']}>
+              <PatientFamilyPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient/feedback"
+          element={
+            <ProtectedRoute requiredRoles={['patient', 'admin', 'super_admin']}>
+              <PatientFeedbackPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient/health-tips"
+          element={
+            <ProtectedRoute requiredRoles={['patient', 'admin', 'super_admin']}>
+              <PatientHealthTipsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient/emergency"
+          element={
+            <ProtectedRoute requiredRoles={['patient', 'admin', 'super_admin']}>
+              <PatientEmergencyPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient/profile"
+          element={
+            <ProtectedRoute requiredRoles={['patient', 'admin', 'super_admin']}>
+              <PatientProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient/health-overview"
+          element={
+            <ProtectedRoute requiredRoles={['patient', 'admin', 'super_admin']}>
+              <PatientHealthOverviewPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/patient/settings"
+          element={
+            <ProtectedRoute requiredRoles={['patient', 'admin', 'super_admin']}>
+              <PatientSettingsPage />
             </ProtectedRoute>
           }
         />

@@ -587,4 +587,139 @@ export const doctorPortalAPI = {
     api.put<{ success: boolean; data: any; message: string }>('/doctor-portal/profile', data),
 };
 
+export const patientPortalAPI = {
+  // 1. Dashboard
+  getDashboard: () =>
+    api.get<{ success: boolean; data: any }>('/patient-portal/dashboard'),
+
+  // 2. Doctor Directory & Slots
+  getDoctors: (params: { specialization?: string; department?: string; search?: string; sortBy?: string } = {}) =>
+    api.get<{ success: boolean; data: any[]; count: number }>(`/patient-portal/doctors?${toSearchParams(params)}`),
+  getDoctorSlots: (doctorId: string, date: string) =>
+    api.get<{ success: boolean; data: { slots: string[]; doctor: any; date: string; day: string } }>(
+      `/patient-portal/doctors/slots?${toSearchParams({ doctorId, date })}`
+    ),
+
+  // 3 & 4. Appointments
+  bookAppointment: (data: {
+    doctorId: string;
+    appointmentDate: string;
+    timeSlot: string;
+    type?: string;
+    reason: string;
+    symptoms?: string[];
+    medicalHistoryNotes?: string;
+    familyMemberId?: string;
+    paymentMode?: 'pay_at_hospital' | 'online_simulation';
+  }) => api.post<{ success: boolean; data: any; message: string }>('/patient-portal/appointments/book', data),
+  getAppointments: (params: { status?: string; type?: string; timeframe?: string } = {}) =>
+    api.get<{ success: boolean; data: any[]; count: number }>(`/patient-portal/appointments?${toSearchParams(params)}`),
+  rescheduleAppointment: (id: string, data: { appointmentDate: string; timeSlot: string; reason?: string }) =>
+    api.put<{ success: boolean; data: any; message: string }>(`/patient-portal/appointments/${id}/reschedule`, data),
+  cancelAppointment: (id: string, reason: string) =>
+    api.put<{ success: boolean; data: any; message: string }>(`/patient-portal/appointments/${id}/cancel`, { reason }),
+
+  // 5. Medical Records & Documents
+  getMedicalRecords: () =>
+    api.get<{
+      success: boolean;
+      data: {
+        timeline: any[];
+        allergies: string[];
+        chronicConditions: string[];
+        bloodGroup?: string;
+        vitalsHistory: any[];
+        uploadedDocuments: any[];
+      };
+    }>('/patient-portal/medical-records'),
+  uploadDocument: (data: { name: string; documentType: string; fileUrl: string; notes?: string }) =>
+    api.post<{ success: boolean; data: any; message: string }>('/patient-portal/medical-records/upload', data),
+
+  // 6. Prescriptions (Read-Only)
+  getPrescriptions: (params: { search?: string } = {}) =>
+    api.get<{ success: boolean; data: any[]; count: number }>(`/patient-portal/prescriptions?${toSearchParams(params)}`),
+
+  // 7. Medical Reports (Investigations)
+  getMedicalReports: (params: { testType?: string; status?: string } = {}) =>
+    api.get<{ success: boolean; data: any[]; count: number }>(`/patient-portal/reports?${toSearchParams(params)}`),
+
+  // 8. Billing & Payments
+  getBilling: (params: { status?: string } = {}) =>
+    api.get<{ success: boolean; data: any[]; summary: { totalBilled: number; totalPaid: number; totalOutstanding: number } }>(
+      `/patient-portal/billing?${toSearchParams(params)}`
+    ),
+  getPatientBilling: (params: { status?: string } = {}) =>
+    api.get<{ success: boolean; data: any[]; summary: { totalBilled: number; totalPaid: number; totalOutstanding: number } }>(
+      `/patient-portal/billing?${toSearchParams(params)}`
+    ),
+  processPayment: (data: { billingId: string; amount: number; paymentMethod: string; transactionReference?: string }) =>
+    api.post<{ success: boolean; data: any; message: string }>('/patient-portal/billing/pay', data),
+
+  // 9. Telemedicine
+  getTelemedicine: () =>
+    api.get<{ success: boolean; data: any[]; count: number }>('/patient-portal/telemedicine'),
+
+  // Notifications
+  getNotifications: () =>
+    api.get<{ success: boolean; data: any[]; unreadCount: number }>('/patient-portal/notifications'),
+  markNotificationRead: (id: string) =>
+    api.patch<{ success: boolean; data: any }>(`/patient-portal/notifications/${id}/read`),
+  markAllNotificationsRead: () =>
+    api.patch<{ success: boolean; message: string }>('/patient-portal/notifications/read-all'),
+
+  // 10. Messages with Doctors
+  getMessages: (doctorId?: string) =>
+    api.get<{ success: boolean; data: any[]; doctors: any[] }>(`/patient-portal/messages?${toSearchParams({ doctorId })}`),
+  sendMessage: (data: { receiverId: string; body: string; subject?: string }) =>
+    api.post<{ success: boolean; data: any; message: string }>('/patient-portal/messages', data),
+
+  // 11. Follow-ups
+  getFollowUps: () =>
+    api.get<{ success: boolean; data: any[]; count: number }>('/patient-portal/follow-ups'),
+
+  // 16. Profile
+  getProfile: () =>
+    api.get<{ success: boolean; data: any }>('/patient-portal/profile'),
+  updateProfile: (data: any) =>
+    api.put<{ success: boolean; data: any; message: string }>('/patient-portal/profile', data),
+
+  // 12. Family Members
+  getFamilyMembers: () =>
+    api.get<{ success: boolean; data: any[]; count: number }>('/patient-portal/family'),
+  addFamilyMember: (data: {
+    fullName: string;
+    relationship: string;
+    dateOfBirth?: string;
+    gender?: string;
+    bloodGroup?: string;
+    allergies?: string[];
+    chronicConditions?: string[];
+    notes?: string;
+  }) => api.post<{ success: boolean; data: any; message: string }>('/patient-portal/family', data),
+  deleteFamilyMember: (id: string) =>
+    api.delete<{ success: boolean; message: string }>(`/patient-portal/family/${id}`),
+
+  // 13. Feedback & Reviews
+  getFeedback: () =>
+    api.get<{ success: boolean; data: any[]; count: number }>('/patient-portal/feedback'),
+  submitDoctorReview: (data: { doctorId: string; rating: number; comment?: string }) =>
+    api.post<{ success: boolean; data: any; message: string }>('/patient-portal/feedback/doctor', data),
+  submitHospitalFeedback: (data: {
+    hospitalRating: number;
+    facilityCleanlinessRating?: number;
+    complaintType?: string;
+    feedbackText: string;
+  }) => api.post<{ success: boolean; data: any; message: string }>('/patient-portal/feedback/hospital', data),
+
+  // 14 & 15. Emergency & Health Tips
+  getEmergencyInfo: () =>
+    api.get<{ success: boolean; data: any }>('/patient-portal/emergency'),
+  getHealthTips: (category?: string) =>
+    api.get<{ success: boolean; data: any[]; count: number }>(`/patient-portal/health-tips?${toSearchParams({ category })}`),
+
+  // 17. Health Overview
+  getHealthOverview: () =>
+    api.get<{ success: boolean; data: any }>('/patient-portal/health-overview'),
+};
+
 export default api;

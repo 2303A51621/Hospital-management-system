@@ -101,17 +101,32 @@ export default function DoctorsPage() {
   });
 
   useEffect(() => {
+    let isMounted = true;
     const loadDoctors = async () => {
       try {
         const res = await doctorAPI.getAll(1, specialization, 50);
-        setDoctors(res.data?.data || []);
+        const list = Array.isArray(res.data?.data)
+          ? res.data.data
+          : Array.isArray(res.data)
+          ? res.data
+          : (res.data as any)?.doctors || [];
+        if (isMounted) {
+          setDoctors(list);
+        }
+      } catch (err: any) {
+        console.error('Error fetching doctors:', err);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     setLoading(true);
     loadDoctors();
+    return () => {
+      isMounted = false;
+    };
   }, [specialization]);
 
   return (
