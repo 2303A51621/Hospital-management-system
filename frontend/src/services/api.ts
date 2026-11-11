@@ -253,6 +253,8 @@ export const authAPI = {
   login: (data: LoginPayload) => api.post<AuthResponse>('/auth/login', data),
   getMe: () => api.get<{ user: AuthUser }>('/auth/me'),
   logout: () => api.post('/auth/logout'),
+  changePassword: (data: { currentPassword: string; newPassword: string }) =>
+    api.put<{ success: boolean; message: string }>('/auth/updatepassword', data),
   getStaff: () => api.get<{ success: boolean; data: StaffMember[]; count: number; groups: Record<string, StaffMember[]> }>('/auth/staff'),
   createStaff: (data: unknown) => api.post('/auth/staff', data),
 };
@@ -484,6 +486,105 @@ export const emergencyAPI = {
 export const aiChatAPI = {
   ask: (question: string, context: { currentPage?: string } = {}) =>
     api.post<ChatResponse>('/ai/chat', { question, ...context }),
+};
+
+export const doctorPortalAPI = {
+  getDashboard: () => api.get<{ success: boolean; data: any }>('/doctor-portal/dashboard'),
+  getPatients: (params: Record<string, string | number | undefined> = {}) =>
+    api.get<{ success: boolean; data: any[]; total: number; page: number; pages: number }>(
+      `/doctor-portal/patients?${toSearchParams(params)}`
+    ),
+  getPatientFullProfile: (patientId: string) =>
+    api.get<{ success: boolean; data: any }>(`/doctor-portal/patients/${patientId}/full-profile`),
+  getPatientTimeline: (patientId: string) =>
+    api.get<{ success: boolean; data: { patient: any; timeline: any[] } }>(
+      `/doctor-portal/patients/${patientId}/timeline`
+    ),
+  addClinicalNote: (patientId: string, data: { condition?: string; treatment?: string; notes?: string }) =>
+    api.post<{ success: boolean; data: any }>(`/doctor-portal/patients/${patientId}/clinical-notes`, data),
+  addPatientAllergy: (patientId: string, data: { allergen: string; severity?: string; reaction?: string }) =>
+    api.post<{ success: boolean; data: any }>(`/doctor-portal/patients/${patientId}/allergies`, data),
+
+  // Appointments quick actions
+  acceptAppointment: (id: string) =>
+    api.put<{ success: boolean; data: any; message: string }>(`/doctor-portal/appointments/${id}/accept`),
+  rejectAppointment: (id: string, rejectionReason: string) =>
+    api.put<{ success: boolean; data: any; message: string }>(`/doctor-portal/appointments/${id}/reject`, { rejectionReason }),
+  markAppointmentNoShow: (id: string) =>
+    api.put<{ success: boolean; data: any; message: string }>(`/doctor-portal/appointments/${id}/no-show`),
+
+  // Consultations
+  getConsultations: (params: Record<string, string | number | undefined> = {}) =>
+    api.get<{ success: boolean; data: any[]; count: number }>(`/doctor-portal/consultations?${toSearchParams(params)}`),
+  getConsultationById: (id: string) =>
+    api.get<{ success: boolean; data: any }>(`/doctor-portal/consultations/${id}`),
+  saveConsultationDraft: (data: any) =>
+    api.post<{ success: boolean; data: any; message: string }>('/doctor-portal/consultations/draft', data),
+  completeConsultation: (data: any) =>
+    api.post<{ success: boolean; data: any; message: string }>('/doctor-portal/consultations/complete', data),
+
+  // Prescriptions
+  getPrescriptions: (params: Record<string, string | number | undefined> = {}) =>
+    api.get<{ success: boolean; data: any[]; count: number }>(`/doctor-portal/prescriptions?${toSearchParams(params)}`),
+  createPrescription: (data: any) =>
+    api.post<{ success: boolean; data: any; allergyAlerts?: any[]; drugInteractions?: any[]; duplicateWarnings?: any[]; message: string }>(
+      '/doctor-portal/prescriptions',
+      data
+    ),
+  checkClinicalSafety: (data: { medicines: any[]; patientId?: string }) =>
+    api.post<{ success: boolean; data: { hasWarnings: boolean; allergyAlerts: any[]; drugInteractions: any[]; duplicateWarnings: any[] } }>(
+      '/doctor-portal/prescriptions/safety-check',
+      data
+    ),
+
+  // Reports
+  getReports: (params: Record<string, string | number | undefined> = {}) =>
+    api.get<{ success: boolean; data: any[]; count: number }>(`/doctor-portal/reports?${toSearchParams(params)}`),
+  orderDiagnosticTest: (data: { patientId: string; testName: string; testType?: string; testCategory?: string; remarks?: string }) =>
+    api.post<{ success: boolean; data: any; message: string }>('/doctor-portal/reports/order', data),
+  reviewReport: (id: string, data: { doctorComments?: string; isAbnormal?: boolean }) =>
+    api.put<{ success: boolean; data: any; message: string }>(`/doctor-portal/reports/${id}/review`, data),
+
+  // Referrals
+  getReferrals: () =>
+    api.get<{ success: boolean; data: { outgoing: any[]; incoming: any[] } }>('/doctor-portal/referrals'),
+  createReferral: (data: any) =>
+    api.post<{ success: boolean; data: any; message: string }>('/doctor-portal/referrals', data),
+  updateReferralStatus: (id: string, status: string) =>
+    api.put<{ success: boolean; data: any }>(`/doctor-portal/referrals/${id}/status`, { status }),
+
+  // Messages
+  getMessages: () =>
+    api.get<{ success: boolean; data: any[]; unreadCount: number }>('/doctor-portal/messages'),
+  sendMessage: (data: { receiverId: string; patientId?: string; subject?: string; body: string; messageType?: string; priority?: string }) =>
+    api.post<{ success: boolean; data: any }>('/doctor-portal/messages', data),
+  markMessageRead: (id: string) =>
+    api.patch<{ success: boolean; data: any }>(`/doctor-portal/messages/${id}/read`),
+
+  // Leave & Availability
+  getLeaveRequests: () =>
+    api.get<{ success: boolean; data: any[] }>('/doctor-portal/leave'),
+  applyLeave: (data: { startDate: string; endDate: string; leaveType?: string; reason: string; emergencyCoverDoctorId?: string }) =>
+    api.post<{ success: boolean; data: any; message: string }>('/doctor-portal/leave', data),
+  updateAvailability: (data: any) =>
+    api.put<{ success: boolean; data: any; message: string }>('/doctor-portal/availability', data),
+
+  // Analytics
+  getAnalytics: () =>
+    api.get<{ success: boolean; data: any }>('/doctor-portal/analytics'),
+
+  // AI Assistant
+  aiClinicalAssist: (data: { symptoms?: string[]; notes?: string; patientId?: string }) =>
+    api.post<{ success: boolean; data: { formattedNoteDraft: string; suggestions: any[]; patientHistorySummary: string; disclaimer: string } }>(
+      '/doctor-portal/ai-assist',
+      data
+    ),
+
+  // Profile
+  getProfile: () =>
+    api.get<{ success: boolean; data: any }>('/doctor-portal/profile'),
+  updateProfile: (data: any) =>
+    api.put<{ success: boolean; data: any; message: string }>('/doctor-portal/profile', data),
 };
 
 export default api;

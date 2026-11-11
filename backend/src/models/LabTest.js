@@ -97,6 +97,16 @@ const labTestSchema = new mongoose.Schema(
         uploadDate: Date,
       },
     ],
+    isAbnormal: {
+      type: Boolean,
+      default: false,
+    },
+    doctorComments: String,
+    reviewedAt: Date,
+    reviewedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Doctor',
+    },
   },
   { timestamps: true }
 );

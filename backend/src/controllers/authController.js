@@ -133,3 +133,17 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
   res.json({ success: true, message: 'If the account exists, reset instructions have been issued' });
 });
 exports.resetPassword = asyncHandler(async (req, res) => res.status(501).json({ message: 'Password reset delivery is not configured' }));
+
+exports.updatePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ message: 'Current password and new password are required' });
+  }
+  const user = await User.findById(req.user._id).select('+password');
+  if (!user || !(await user.comparePassword(currentPassword))) {
+    return res.status(401).json({ message: 'Current password does not match' });
+  }
+  user.password = newPassword;
+  await user.save();
+  res.json({ success: true, message: 'Password updated successfully' });
+});

@@ -64,6 +64,8 @@ const appointmentSchema = new mongoose.Schema(
       default: 'routine',
     },
     reason: String,
+    rejectionReason: String,
+    cancellationReason: String,
     symptoms: [String],
     queueToken: {
       type: Number,

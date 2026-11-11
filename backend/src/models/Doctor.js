@@ -97,6 +97,19 @@ const doctorSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    digitalSignature: {
+      type: String,
+      default: null,
+    },
+    emergencyAvailable: {
+      type: Boolean,
+      default: true,
+    },
+    customUnavailableDates: [
+      {
+        type: Date,
+      },
+    ],
     isActive: {
       type: Boolean,
       default: true,

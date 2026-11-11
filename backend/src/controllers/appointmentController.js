@@ -2,6 +2,7 @@ const Appointment = require('../models/Appointment');
 const Patient = require('../models/Patient');
 const Doctor = require('../models/Doctor');
 const Billing = require('../models/Billing');
+const LeaveRequest = require('../models/LeaveRequest');
 const { buildInvoicePayload } = require('../services/billingService');
 const { list, getById, create, updateById, asyncHandler } = require('./_helpers');
 
@@ -87,6 +88,17 @@ exports.bookAppointment = asyncHandler(async (req, res) => {
 	if (Number.isNaN(appointmentDate.getTime()) || appointmentDate < new Date(new Date().toDateString())) {
 		return res.status(400).json({ message: 'A valid future appointment date is required' });
 	}
+	// Check approved leave
+	const onLeave = await LeaveRequest.findOne({
+		doctorId: doctor._id,
+		status: 'approved',
+		startDate: { $lte: new Date(`${body.appointmentDate}T23:59:59.999`) },
+		endDate: { $gte: new Date(`${body.appointmentDate}T00:00:00`) },
+	});
+	if (onLeave) {
+		return res.status(409).json({ message: 'The doctor is on approved leave on this date. Please select another date.' });
+	}
+
 	const existing = await Appointment.find({
 		doctorId: doctor._id,
 		appointmentDate: { $gte: new Date(`${body.appointmentDate}T00:00:00`), $lt: new Date(`${body.appointmentDate}T23:59:59.999`) },
@@ -140,9 +152,29 @@ exports.getDoctorAvailability = asyncHandler(async (req, res) => {
 	if (!date) return res.status(400).json({ message: 'Date is required' });
 	const doctor = await Doctor.findById(req.params.doctorId);
 	if (!doctor) return res.status(404).json({ message: 'Doctor not found' });
+
+	// Check if doctor is on approved leave
+	const targetDate = new Date(`${date}T00:00:00`);
+	const leave = await LeaveRequest.findOne({
+		doctorId: doctor._id,
+		status: 'approved',
+		startDate: { $lte: new Date(`${date}T23:59:59.999`) },
+		endDate: { $gte: targetDate },
+	});
+	if (leave) {
+		return res.json({
+			success: true,
+			data: [],
+			availableSlots: [],
+			doctorId: req.params.doctorId,
+			date,
+			message: 'Doctor is on approved leave on this date.',
+		});
+	}
+
 	const appointments = await Appointment.find({
 		doctorId: doctor._id,
-		appointmentDate: { $gte: new Date(`${date}T00:00:00`), $lt: new Date(`${date}T23:59:59.999`) },
+		appointmentDate: { $gte: targetDate, $lt: new Date(`${date}T23:59:59.999`) },
 	}).select('startTime status');
 	res.json({ success: true, data: getAvailableSlots(doctor, date, appointments), availableSlots: getAvailableSlots(doctor, date, appointments), doctorId: req.params.doctorId, date });
 });

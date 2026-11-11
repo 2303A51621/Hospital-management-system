@@ -21,34 +21,65 @@ const prescriptionSchema = new mongoose.Schema(
     emrId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'EMR',
-      required: true,
+      required: false,
+      default: null,
+    },
+    consultationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Consultation',
+      required: false,
+      default: null,
+    },
+    appointmentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Appointment',
+      required: false,
+      default: null,
+    },
+    diagnosis: {
+      type: String,
+      default: '',
     },
     medicines: [
       {
         medicineId: {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'Medicine',
+          required: false,
+        },
+        medicineName: {
+          type: String,
           required: true,
         },
-        medicineName: String,
         dosage: {
-          quantity: Number,
-          unit: {
-            type: String,
-            enum: ['mg', 'ml', 'tablet', 'capsule'],
-          },
+          type: String, // e.g. "500 mg" or "1 tablet"
+          required: true,
         },
         frequency: {
-          type: String,
-          enum: ['once daily', 'twice daily', 'thrice daily', 'every 4 hours', 'every 6 hours', 'as needed'],
+          type: String, // e.g. "once daily", "twice daily"
+          required: true,
         },
-        duration: Number, // in days
-        instructions: String,
-        isMandatory: Boolean,
+        duration: {
+          type: String, // e.g. "5 days"
+          required: true,
+        },
+        quantity: {
+          type: Number,
+          default: 10,
+        },
+        instructions: {
+          type: String, // e.g. "After food"
+          default: 'After food',
+        },
+        alternativeMedicine: {
+          type: String,
+          default: '',
+        },
       },
     ],
     prescriptionDate: {
       type: Date,
+      default: Date.now,
       required: true,
     },
     validUntil: Date,
@@ -57,15 +88,21 @@ const prescriptionSchema = new mongoose.Schema(
       enum: ['active', 'expired', 'completed', 'cancelled'],
       default: 'active',
     },
-    refillsAllowed: Number,
-    refillsUsed: {
-      type: Number,
-      default: 0,
-    },
     notes: String,
     digitalSignature: String,
+    allergiesChecked: {
+      type: Boolean,
+      default: true,
+    },
+    drugInteractionsChecked: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );
+
+prescriptionSchema.index({ doctorId: 1, prescriptionDate: -1 });
+prescriptionSchema.index({ patientId: 1, prescriptionDate: -1 });
 
 module.exports = mongoose.model('Prescription', prescriptionSchema);

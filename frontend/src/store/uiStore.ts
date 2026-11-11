@@ -24,3 +24,4 @@ export const useUIStore = create<UIStore>((set) => ({
     set({ isSidebarOpen: false });
   },
 }));
+

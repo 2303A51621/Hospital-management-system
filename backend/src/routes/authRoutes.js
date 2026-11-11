@@ -1,6 +1,6 @@
 const express = require('express');
 const { body } = require('express-validator');
-const { register, createAdmin, getStaff, createStaff, login, getMe, logout, forgotPassword, resetPassword } = require('../controllers/authController');
+const { register, createAdmin, getStaff, createStaff, login, getMe, logout, forgotPassword, resetPassword, updatePassword } = require('../controllers/authController');
 const { protect, authorize } = require('../middleware/auth');
 
 const router = express.Router();
@@ -43,6 +43,7 @@ router.post(
 );
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
+router.put('/updatepassword', protect, updatePassword);
 router.get('/me', protect, getMe);
 router.post('/logout', protect, logout);
 

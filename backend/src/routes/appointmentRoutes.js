@@ -33,7 +33,7 @@ router.get('/:id', authorize('admin', 'doctor', 'nurse', 'patient'), logActivity
 router.post('/', authorize('patient', 'receptionist'), logActivity('appointment', 'create'), bookAppointment);
 
 // PUT routes
-router.put('/:id/reschedule', authorize('patient', 'receptionist'), logActivity('appointment', 'update'), rescheduleAppointment);
+router.put('/:id/reschedule', authorize('patient', 'receptionist', 'doctor'), logActivity('appointment', 'update'), rescheduleAppointment);
 router.put('/:id/cancel', authorize('patient', 'receptionist', 'doctor'), logActivity('appointment', 'update'), cancelAppointment);
 router.put('/:id/complete', authorize('doctor', 'nurse'), logActivity('appointment', 'update'), completeAppointment);
 router.post('/:id/review', authorize('patient', 'admin', 'super_admin'), logActivity('appointment', 'update'), submitAppointmentReview);
