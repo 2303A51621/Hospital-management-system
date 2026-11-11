@@ -26,10 +26,16 @@ const getAvailableSlots = (doctor, date, appointments) => {
 
 	const duration = Number(schedule.slotDuration || doctor.availableSlots?.slotDuration || 30);
 	const slots = [];
-	for (let start = toMinutes(schedule.startTime); start + duration <= toMinutes(schedule.endTime); start += duration) {
-		const startTime = `${String(Math.floor(start / 60)).padStart(2, '0')}:${String(start % 60).padStart(2, '0')}`;
-		const end = start + duration;
-		const endTime = `${String(Math.floor(end / 60)).padStart(2, '0')}:${String(end % 60).padStart(2, '0')}`;
+	let startMinutes = toMinutes(schedule.startTime);
+	let endMinutes = toMinutes(schedule.endTime);
+	if (endMinutes <= startMinutes) {
+		endMinutes += 1440;
+	}
+	for (let start = startMinutes; start + duration <= endMinutes; start += duration) {
+		const curStart = start % 1440;
+		const curEnd = (start + duration) % 1440;
+		const startTime = `${String(Math.floor(curStart / 60)).padStart(2, '0')}:${String(curStart % 60).padStart(2, '0')}`;
+		const endTime = `${String(Math.floor(curEnd / 60)).padStart(2, '0')}:${String(curEnd % 60).padStart(2, '0')}`;
 		if (!appointments.some((appointment) => appointment.startTime === startTime
 			&& ['pending', 'confirmed', 'scheduled'].includes(appointment.status))) {
 			slots.push({ startTime, endTime });

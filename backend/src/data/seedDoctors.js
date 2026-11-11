@@ -69,6 +69,23 @@ const buildDoctorRecord = (index) => {
   const specialization = SPECIALIZATIONS[index % SPECIALIZATIONS.length];
   const email = `doctor${String(index + 1).padStart(2, '0')}@kushalhospitals.com`;
 
+  const SHIFTS_12H = [
+    { startTime: '06:00', endTime: '18:00' },
+    { startTime: '08:00', endTime: '20:00' },
+    { startTime: '10:00', endTime: '22:00' },
+    { startTime: '12:00', endTime: '24:00' },
+    { startTime: '14:00', endTime: '02:00' },
+    { startTime: '16:00', endTime: '04:00' },
+    { startTime: '18:00', endTime: '06:00' },
+    { startTime: '20:00', endTime: '08:00' },
+    { startTime: '22:00', endTime: '10:00' },
+    { startTime: '00:00', endTime: '12:00' },
+    { startTime: '02:00', endTime: '14:00' },
+    { startTime: '04:00', endTime: '16:00' },
+  ];
+  const shift = SHIFTS_12H[index % SHIFTS_12H.length];
+  const EVERY_DAY = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
   return {
     firstName,
     lastName,
@@ -85,12 +102,17 @@ const buildDoctorRecord = (index) => {
     bio: `${firstName} ${lastName} is a ${specialization} specialist at Kushal Hospitals.`,
     consultationFee: 500 + (index % 10) * 100,
     department: departmentsBySpecialization[specialization],
-    availableDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+    availableDays: EVERY_DAY,
     availableSlots: {
-      startTime: '00:00',
-      endTime: '24:00',
+      startTime: shift.startTime,
+      endTime: shift.endTime,
       slotDuration: 30,
     },
+    availability: EVERY_DAY.map((day) => ({
+      day,
+      startTime: shift.startTime,
+      endTime: shift.endTime,
+    })),
   };
 };
 
@@ -138,6 +160,7 @@ const seedDoctors = async () => {
       existingDoctor.department = record.department;
       existingDoctor.availableDays = record.availableDays;
       existingDoctor.availableSlots = record.availableSlots;
+      existingDoctor.availability = record.availability;
       existingDoctor.isActive = true;
       await existingDoctor.save();
       updatedDoctors += 1;
@@ -153,6 +176,7 @@ const seedDoctors = async () => {
         department: record.department,
         availableDays: record.availableDays,
         availableSlots: record.availableSlots,
+        availability: record.availability,
         isActive: true,
       });
       createdDoctors += 1;

@@ -12,6 +12,7 @@ import {
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import { patientPortalAPI, doctorAPI } from '../../services/api';
+import { formatDoctorShift, generateDoctor12HourSlots } from '../../utils/doctorAvailability';
 import toast from 'react-hot-toast';
 
 export default function PatientBookAppointmentPage() {
@@ -80,25 +81,29 @@ export default function PatientBookAppointmentPage() {
       try {
         setLoadingSlots(true);
         const res = await patientPortalAPI.getDoctorSlots(selectedDoctorId, appointmentDate);
-        const slots = res.data?.data?.slots || [];
-        setAvailableSlots(slots);
+        const resData: any = res.data;
+        const slots = resData?.slots || resData?.data?.slots || resData?.availableSlots || [];
         if (slots.length > 0) {
+          setAvailableSlots(slots);
           setTimeSlot(slots[0]);
         } else {
-          setTimeSlot('');
+          const doc = doctors.find((d) => d._id === selectedDoctorId);
+          const fallbackSlots = generateDoctor12HourSlots(doc?.availableSlots?.startTime, doc?.availableSlots?.endTime);
+          setAvailableSlots(fallbackSlots);
+          setTimeSlot(fallbackSlots[0] || '');
         }
       } catch (err: any) {
-        // Fallback default slots
-        const defaultSlots = ['09:00 AM', '10:00 AM', '11:00 AM', '02:00 PM', '03:30 PM', '05:00 PM'];
-        setAvailableSlots(defaultSlots);
-        setTimeSlot(defaultSlots[0]);
+        const doc = doctors.find((d) => d._id === selectedDoctorId);
+        const fallbackSlots = generateDoctor12HourSlots(doc?.availableSlots?.startTime, doc?.availableSlots?.endTime);
+        setAvailableSlots(fallbackSlots);
+        setTimeSlot(fallbackSlots[0] || '');
       } finally {
         setLoadingSlots(false);
       }
     };
 
     fetchSlots();
-  }, [selectedDoctorId, appointmentDate]);
+  }, [selectedDoctorId, appointmentDate, doctors]);
 
   const selectedDoctor = doctors.find((d) => d._id === selectedDoctorId);
   const doctorUser = selectedDoctor?.userId || {};
@@ -317,6 +322,24 @@ export default function PatientBookAppointmentPage() {
                       <Clock size={18} className="text-teal-700" />
                       <h3 className="text-sm font-bold text-slate-900">2. Consultation Schedule & Real-Time Slots</h3>
                     </div>
+
+                    {selectedDoctor && (
+                      <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 border border-emerald-200/70 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                          </span>
+                          <span className="font-bold text-emerald-900">Available: Monday to Sunday (7 Days)</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center gap-1 font-semibold text-teal-800 bg-white/90 px-2.5 py-1 rounded-lg border border-teal-100 shadow-xs">
+                            <Clock size={12} className="text-teal-700" />
+                            12h Duty: <strong>{formatDoctorShift(selectedDoctor).shiftRange}</strong> ({formatDoctorShift(selectedDoctor).shiftTag})
+                          </span>
+                        </div>
+                      </div>
+                    )}
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>

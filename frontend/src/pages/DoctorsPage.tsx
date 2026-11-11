@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   CalendarDays,
+  Clock,
   Filter,
   MapPin,
   Search,
@@ -13,6 +14,7 @@ import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import { doctorAPI, type Doctor, type DoctorReview } from '../services/api';
 import { useAuthStore } from '../store/authStore';
+import { formatDoctorShift } from '../utils/doctorAvailability';
 
 const SPECIALIZATION_OPTIONS = [
   'Cardiology',
@@ -50,6 +52,7 @@ export default function DoctorsPage() {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
   const [specialization, setSpecialization] = useState('');
+  const [shiftFilter, setShiftFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [reviewsByDoctor, setReviewsByDoctor] = useState<Record<string, DoctorReview[]>>({});
   const [loadingReviewsFor, setLoadingReviewsFor] = useState<string | null>(null);
@@ -88,6 +91,13 @@ export default function DoctorsPage() {
   const visibleDoctors = doctors.filter((doctor) => {
     const details = SPECIALIZATION_SERVICES[doctor.specialization];
     const doctorName = doctor.userId?.name || `${doctor.userId?.firstName || ''} ${doctor.userId?.lastName || ''}`;
+    const shift = formatDoctorShift(doctor);
+
+    // Apply shift filter if selected
+    if (shiftFilter && !shift.shiftTag.toLowerCase().includes(shiftFilter.toLowerCase()) && !shift.shiftName.toLowerCase().includes(shiftFilter.toLowerCase())) {
+      return false;
+    }
+
     const searchableText = [
       doctorName,
       doctor.specialization,
@@ -96,6 +106,12 @@ export default function DoctorsPage() {
       details?.service,
       details?.clinic,
       details?.tags.join(' '),
+      shift.shiftRange,
+      shift.shiftTag,
+      shift.shiftName,
+      'monday to sunday',
+      '7 days',
+      '12 hours',
     ].filter(Boolean).join(' ').toLowerCase();
     return searchableText.includes(searchQuery.trim().toLowerCase());
   });
@@ -153,6 +169,16 @@ export default function DoctorsPage() {
                   <p className="mt-2 max-w-2xl text-sm sm:text-base text-teal-100/90 leading-relaxed">
                     Consult renowned physicians, senior surgeons, and specialists across Kushal Hospitals departments.
                   </p>
+                  <div className="mt-3.5 flex flex-wrap gap-2 text-xs">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 font-bold text-white border border-white/25 shadow-xs backdrop-blur-md">
+                      <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+                      Monday to Sunday (All 7 Days)
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-300/20 px-3 py-1 font-bold text-teal-100 border border-teal-300/30 backdrop-blur-md">
+                      <Clock size={13} className="text-teal-200" />
+                      12-Hour Staggered Shift Rotations (24/7 Hospital Coverage)
+                    </span>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -183,7 +209,7 @@ export default function DoctorsPage() {
                   </p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-2.5 w-full md:w-[32rem]">
+                <div className="flex flex-col sm:flex-row gap-2.5 w-full md:w-[38rem]">
                   <div className="relative flex-1">
                     <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <input
@@ -191,7 +217,7 @@ export default function DoctorsPage() {
                       type="search"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search doctor, specialty, department..."
+                      placeholder="Search doctor, specialty, shift (e.g. morning, 12h)..."
                       className="w-full rounded-xl border border-slate-200 bg-slate-50/70 py-2.5 pl-10 pr-4 text-xs sm:text-sm text-slate-800 transition focus:border-teal-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20"
                     />
                   </div>
@@ -199,7 +225,7 @@ export default function DoctorsPage() {
                   <select
                     id="specialization"
                     title="Doctor specialization filter"
-                    className="rounded-xl border border-slate-200 bg-slate-50/70 px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-slate-800 transition focus:border-teal-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                    className="rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2.5 text-xs sm:text-sm font-semibold text-slate-800 transition focus:border-teal-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20"
                     value={specialization}
                     onChange={(e) => setSpecialization(e.target.value)}
                   >
@@ -209,6 +235,23 @@ export default function DoctorsPage() {
                         {item}
                       </option>
                     ))}
+                  </select>
+
+                  <select
+                    id="shift-filter"
+                    title="Doctor shift filter"
+                    className="rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2.5 text-xs sm:text-sm font-semibold text-slate-800 transition focus:border-teal-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                    value={shiftFilter}
+                    onChange={(e) => setShiftFilter(e.target.value)}
+                  >
+                    <option value="">All 12h Shifts</option>
+                    <option value="Morning">Morning Shift</option>
+                    <option value="Day">Day Shift</option>
+                    <option value="Mid-Day">Mid-Day Shift</option>
+                    <option value="Afternoon">Afternoon Shift</option>
+                    <option value="Evening">Evening Shift</option>
+                    <option value="Night">Night Shift</option>
+                    <option value="Overnight">Overnight Shift</option>
                   </select>
                 </div>
               </div>
@@ -254,6 +297,7 @@ export default function DoctorsPage() {
 
                   const rating = Number(doctor.rating || 4.9);
                   const fee = Number(doctor.consultationFee || 500);
+                  const shiftInfo = formatDoctorShift(doctor);
 
                   return (
                     <article
@@ -306,6 +350,31 @@ export default function DoctorsPage() {
                               {tag}
                             </span>
                           ))}
+                        </div>
+
+                        {/* 12-Hour Shift & Monday-to-Sunday Availability Card */}
+                        <div className="rounded-2xl bg-gradient-to-r from-emerald-50/80 via-teal-50/70 to-cyan-50/80 border border-emerald-200/80 p-3 space-y-1.5 text-xs shadow-xs">
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="inline-flex items-center gap-1.5 font-bold text-emerald-800">
+                              <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                              </span>
+                              <span>Monday – Sunday (7 Days)</span>
+                            </span>
+                            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-teal-700 text-white shadow-xs tracking-wide">
+                              {shiftInfo.shiftTag}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-teal-900 font-semibold text-[11px] pt-1 border-t border-emerald-100">
+                            <span className="inline-flex items-center gap-1 text-slate-700">
+                              <Clock size={12} className="text-teal-700 shrink-0" />
+                              <span>Consultation Hours:</span>
+                            </span>
+                            <span className="font-bold text-teal-900 bg-white/90 px-2 py-0.5 rounded-md border border-teal-100 shadow-xs">
+                              {shiftInfo.shiftRange}
+                            </span>
+                          </div>
                         </div>
 
                         {/* Ratings & Tariffs bar */}

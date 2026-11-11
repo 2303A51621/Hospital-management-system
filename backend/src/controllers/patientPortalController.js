@@ -131,7 +131,7 @@ exports.getPatientDashboard = asyncHandler(async (req, res) => {
 exports.getDoctorsDirectory = asyncHandler(async (req, res) => {
   const { specialization, department, search, sort = 'experience' } = req.query;
 
-  const query = { isActive: true };
+  const query = { isActive: { $ne: false } };
 
   if (specialization) query.specialization = specialization;
   if (department) query.department = department;
@@ -188,14 +188,50 @@ exports.getDoctorAvailableSlots = asyncHandler(async (req, res) => {
       isOnLeave: true,
       leaveReason: 'Doctor is on approved clinical leave',
       availableSlots: [],
+      slots: [],
+      data: { slots: [], day: dayName, date, doctor: { _id: doctor._id } },
     });
   }
 
-  // 2. Determine base schedule for that day
-  const defaultSlotTimes = [
-    '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
-    '14:00', '14:30', '15:00', '15:30', '16:00', '16:30',
-  ];
+  // 2. Determine base schedule for that day (12-hour shift)
+  const schedule = doctor.availability?.find((item) => item.day === dayName)
+    || (doctor.availableDays?.includes(dayName) ? doctor.availableSlots : null)
+    || doctor.availableSlots
+    || { startTime: '08:00', endTime: '20:00', slotDuration: 30 };
+
+  const startTimeStr = schedule.startTime || '08:00';
+  const endTimeStr = schedule.endTime || '20:00';
+  const duration = Number(schedule.slotDuration || 30);
+
+  const toMinutes = (timeStr) => {
+    if (!timeStr) return 0;
+    const [h, m] = String(timeStr).split(':').map(Number);
+    return (h || 0) * 60 + (m || 0);
+  };
+
+  let start = toMinutes(startTimeStr);
+  let end = toMinutes(endTimeStr);
+  if (end <= start) {
+    end += 1440; // 24h wrap for overnight shifts
+  }
+
+  const toAmPm = (h24, m) => {
+    const period = h24 >= 12 && h24 < 24 ? 'PM' : 'AM';
+    const displayHour = h24 % 12 === 0 ? 12 : h24 % 12;
+    return `${String(displayHour).padStart(2, '0')}:${String(m).padStart(2, '0')} ${period}`;
+  };
+
+  const allSlots24 = [];
+  const allSlotsAmPm = [];
+  for (let t = start; t + duration <= end; t += duration) {
+    const curStartMin = t % 1440;
+    const sh = Math.floor(curStartMin / 60);
+    const sm = curStartMin % 60;
+    const time24 = `${String(sh).padStart(2, '0')}:${String(sm).padStart(2, '0')}`;
+    const timeAmPm = toAmPm(sh, sm);
+    allSlots24.push(time24);
+    allSlotsAmPm.push(timeAmPm);
+  }
 
   // 3. Find existing bookings for that date
   const bookedAppointments = await Appointment.find({
@@ -208,14 +244,53 @@ exports.getDoctorAvailableSlots = asyncHandler(async (req, res) => {
   });
 
   const bookedTimes = new Set(bookedAppointments.map((a) => a.startTime));
-  const availableSlots = defaultSlotTimes.filter((slot) => !bookedTimes.has(slot));
+  const availableSlotsAmPm = [];
+  const availableSlots24 = [];
+  for (let i = 0; i < allSlots24.length; i++) {
+    const slot24 = allSlots24[i];
+    const slotAmPm = allSlotsAmPm[i];
+    if (!bookedTimes.has(slot24) && !bookedTimes.has(slotAmPm)) {
+      availableSlotsAmPm.push(slotAmPm);
+      availableSlots24.push(slot24);
+    }
+  }
+
+  const formatAmPmStr = (timeStr) => {
+    if (!timeStr) return '';
+    const [h, m] = String(timeStr).split(':').map(Number);
+    const period = h >= 12 && h < 24 ? 'PM' : 'AM';
+    const dh = h % 12 === 0 ? 12 : h % 12;
+    return `${String(dh).padStart(2, '0')}:${String(m || 0).padStart(2, '0')} ${period}`;
+  };
+
+  const shiftTiming = `${formatAmPmStr(startTimeStr)} - ${formatAmPmStr(endTimeStr)}`;
 
   res.json({
     success: true,
     dayName,
     date,
     doctorFee: doctor.consultationFee,
-    availableSlots,
+    shiftHours: '12 Hours',
+    shiftTiming,
+    availableDays: doctor.availableDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+    availableSlots: availableSlotsAmPm,
+    slots: availableSlotsAmPm,
+    rawSlots: availableSlots24,
+    data: {
+      slots: availableSlotsAmPm,
+      rawSlots: availableSlots24,
+      day: dayName,
+      date,
+      shiftHours: '12 Hours',
+      shiftTiming,
+      doctor: {
+        _id: doctor._id,
+        specialization: doctor.specialization,
+        consultationFee: doctor.consultationFee,
+        availableSlots: doctor.availableSlots,
+        availableDays: doctor.availableDays,
+      },
+    },
     bookedCount: bookedTimes.size,
   });
 });

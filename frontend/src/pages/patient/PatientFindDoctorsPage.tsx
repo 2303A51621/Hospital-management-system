@@ -13,6 +13,7 @@ import {
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import { patientPortalAPI, doctorAPI } from '../../services/api';
+import { formatDoctorShift } from '../../utils/doctorAvailability';
 import toast from 'react-hot-toast';
 
 const SPECIALIZATIONS = [
@@ -37,6 +38,7 @@ export default function PatientFindDoctorsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [specialization, setSpecialization] = useState('All Specializations');
+  const [shiftFilter, setShiftFilter] = useState('');
   const [sortBy, setSortBy] = useState('rating');
 
   const loadDoctors = async () => {
@@ -86,12 +88,25 @@ export default function PatientFindDoctorsPage() {
   };
 
   const filteredDoctors = doctors.filter((doc) => {
+    const shift = formatDoctorShift(doc);
+    if (shiftFilter && !shift.shiftTag.toLowerCase().includes(shiftFilter.toLowerCase()) && !shift.shiftName.toLowerCase().includes(shiftFilter.toLowerCase())) {
+      return false;
+    }
+
     const userObj = doc.userId || {};
     const name = (userObj.name || `${userObj.firstName || ''} ${userObj.lastName || ''}`).toLowerCase();
     const spec = (doc.specialization || '').toLowerCase();
     const dept = (doc.department || '').toLowerCase();
     const q = search.toLowerCase();
-    return name.includes(q) || spec.includes(q) || dept.includes(q);
+    return (
+      name.includes(q) ||
+      spec.includes(q) ||
+      dept.includes(q) ||
+      shift.shiftRange.toLowerCase().includes(q) ||
+      shift.shiftTag.toLowerCase().includes(q) ||
+      shift.shiftName.toLowerCase().includes(q) ||
+      'monday to sunday'.includes(q)
+    );
   });
 
   return (
@@ -118,6 +133,16 @@ export default function PatientFindDoctorsPage() {
                   <p className="text-sm text-teal-100/90 max-w-2xl mt-1">
                     Book verified outpatient and telemedicine consultations with Kushal Hospitals board-certified physicians.
                   </p>
+                  <div className="mt-3.5 flex flex-wrap gap-2 text-xs">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 font-bold text-white border border-white/25 shadow-xs backdrop-blur-md">
+                      <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+                      Monday to Sunday (All 7 Days)
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-300/20 px-3 py-1 font-bold text-teal-100 border border-teal-300/30 backdrop-blur-md">
+                      <Clock size={13} className="text-teal-200" />
+                      12-Hour Staggered Shift Rotations (24/7 Coverage)
+                    </span>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/20">
@@ -165,6 +190,21 @@ export default function PatientFindDoctorsPage() {
                     <option value="experience">Sort: Most Experienced</option>
                     <option value="fee_low">Fee: Low to High</option>
                     <option value="fee_high">Fee: High to Low</option>
+                  </select>
+
+                  <select
+                    value={shiftFilter}
+                    onChange={(e) => setShiftFilter(e.target.value)}
+                    className="px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-600"
+                  >
+                    <option value="">All 12h Shifts</option>
+                    <option value="Morning">Morning Shift</option>
+                    <option value="Day">Day Shift</option>
+                    <option value="Mid-Day">Mid-Day Shift</option>
+                    <option value="Afternoon">Afternoon Shift</option>
+                    <option value="Evening">Evening Shift</option>
+                    <option value="Night">Night Shift</option>
+                    <option value="Overnight">Overnight Shift</option>
                   </select>
 
                   <button
@@ -265,6 +305,36 @@ export default function PatientFindDoctorsPage() {
                             <span>License: <strong className="font-mono text-slate-700">{doc.licenseNumber || 'KH-DOC-MED'}</strong></span>
                           </div>
                         </div>
+
+                        {/* 12-Hour Shift & Monday to Sunday Availability */}
+                        {(() => {
+                          const shiftInfo = formatDoctorShift(doc);
+                          return (
+                            <div className="mt-3 rounded-2xl bg-gradient-to-r from-emerald-50/70 via-teal-50/60 to-cyan-50/70 border border-emerald-200/70 p-3 space-y-1.5 text-xs shadow-xs">
+                              <div className="flex items-center justify-between gap-1">
+                                <span className="inline-flex items-center gap-1.5 font-bold text-emerald-800">
+                                  <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                  </span>
+                                  <span>Monday – Sunday (7 Days)</span>
+                                </span>
+                                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-teal-700 text-white shadow-xs">
+                                  {shiftInfo.shiftTag}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between text-teal-900 font-semibold text-[11px] pt-1 border-t border-emerald-100">
+                                <span className="inline-flex items-center gap-1 text-slate-700">
+                                  <Clock size={12} className="text-teal-700 shrink-0" />
+                                  <span>12h Duty Hours:</span>
+                                </span>
+                                <span className="font-bold text-teal-900 bg-white/90 px-2 py-0.5 rounded-md border border-teal-100 shadow-xs">
+                                  {shiftInfo.shiftRange}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })()}
 
                         {/* Bio snippet */}
                         <p className="text-xs text-slate-500 mt-3 line-clamp-2 leading-relaxed">
