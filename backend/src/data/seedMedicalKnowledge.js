@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const { connectDB } = require('../config/db');
 const MedicalKnowledge = require('../models/MedicalKnowledge');
+const { comprehensiveKnowledgeBase } = require('./seedComprehensiveMedicalKnowledge');
 
 const documents = [
   {
@@ -128,10 +129,11 @@ const documents = [
 
 const seed = async () => {
   await connectDB();
-  for (const document of documents) {
+  const allDocs = [...documents, ...comprehensiveKnowledgeBase];
+  for (const document of allDocs) {
     await MedicalKnowledge.updateOne({ sourceId: document.sourceId }, { $set: document }, { upsert: true });
   }
-  console.log(`Medical knowledge seed complete: ${documents.length} approved documents`);
+  console.log(`Medical knowledge seed complete: ${allDocs.length} approved documents`);
   await mongoose.connection.close();
 };
 

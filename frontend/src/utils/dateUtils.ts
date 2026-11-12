@@ -34,3 +34,4 @@ export function formatDisplayDate(dateVal: any): string {
   } catch {}
   return String(dateVal);
 }
+

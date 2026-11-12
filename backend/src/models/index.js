@@ -23,6 +23,7 @@ const EmergencyRequest = require('./EmergencyRequest');
 const MedicalKnowledge = require('./MedicalKnowledge');
 const ActivityLog = require('./ActivityLog');
 const AIChatAudit = require('./AIChatAudit');
+const AIChatSession = require('./AIChatSession');
 
 module.exports = {
   User,
@@ -49,5 +50,6 @@ module.exports = {
   MedicalKnowledge,
   ActivityLog,
   AIChatAudit,
+  AIChatSession,
 };
 

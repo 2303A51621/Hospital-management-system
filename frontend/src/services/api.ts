@@ -242,8 +242,15 @@ export interface EmergencyRequestRecord {
 export interface ChatResponse {
   success: boolean;
   message: string;
-  agent: string;
-  groundedIn: string[];
+  content?: string;
+  sessionId?: string;
+  sessionTitle?: string;
+  agent?: string;
+  sources?: string[];
+  isEmergency?: boolean;
+  intent?: string;
+  modelUsed?: string;
+  groundedIn?: string[];
 }
 
 export const authAPI = {
@@ -484,8 +491,27 @@ export const emergencyAPI = {
 };
 
 export const aiChatAPI = {
-  ask: (question: string, context: { currentPage?: string } = {}) =>
-    api.post<ChatResponse>('/ai/chat', { question, ...context }),
+  ask: (question: string, context: { currentPage?: string; sessionId?: string; attachments?: any[] } = {}) =>
+    api.post<ChatResponse>('/ai/chat', { question, message: question, ...context }),
+  sendMessage: (data: { message: string; sessionId?: string; attachments?: any[]; currentPage?: string }) =>
+    api.post<ChatResponse>('/ai/chat/message', data),
+  getSessions: () =>
+    api.get<{ success: boolean; count: number; data: Array<{ id: string; title: string; isPinned: boolean; lastMessageAt: string; messageCount: number; preview?: string }> }>('/ai/chat/sessions'),
+  createSession: (title?: string) =>
+    api.post<{ success: boolean; data: { id: string; title: string; messages: any[]; lastMessageAt: string } }>('/ai/chat/sessions', { title }),
+  getSession: (id: string) =>
+    api.get<{ success: boolean; data: { id: string; title: string; isPinned: boolean; messages: any[]; createdAt: string } }>(`/ai/chat/sessions/${id}`),
+  deleteSession: (id: string) =>
+    api.delete<{ success: boolean; message: string }>(`/ai/chat/sessions/${id}`),
+  clearAllSessions: () =>
+    api.delete<{ success: boolean; message: string }>('/ai/chat/sessions'),
+  uploadReport: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post<{ success: boolean; data: { fileName: string; fileType: string; fileSize: number; extractedText: string; analysisSummary: any; parametersDetected: number; formattedAnalysis: string } }>('/ai/chat/upload-report', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 };
 
 export const doctorPortalAPI = {

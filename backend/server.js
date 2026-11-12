@@ -66,6 +66,7 @@ app.use('/api/emr', require('./src/routes/emrRoutes'));
 app.use('/api/notifications', require('./src/routes/notificationRoutes'));
 app.use('/api/emergency', require('./src/routes/emergencyRoutes'));
 app.use('/api/ai/chat', require('./src/routes/aiChatRoutes'));
+app.use('/api/ai-chat', require('./src/routes/aiChatRoutes'));
 app.use('/api/doctor-portal', require('./src/routes/doctorPortalRoutes'));
 app.use('/api/patient-portal', require('./src/routes/patientPortalRoutes'));
 
