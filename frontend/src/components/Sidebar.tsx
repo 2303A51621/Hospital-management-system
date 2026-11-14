@@ -31,6 +31,9 @@ import {
   Video,
   Star,
   Sparkles,
+  Activity,
+  ClipboardList,
+  FileText,
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -116,6 +119,38 @@ export default function Sidebar() {
         { path: '/patient/emergency', label: 'Emergency Support', icon: PhoneCall },
         { path: '/patient/profile', label: 'My Profile', icon: User },
         { path: '/patient/settings', label: 'Settings', icon: Settings },
+      ],
+    },
+  ];
+
+  // Nurse Role Module Sidebar Menu Items
+  const nurseMenuItems = [
+    {
+      group: 'PATIENT CARE',
+      items: [
+        { path: '/nurse/dashboard', label: 'Nurse Dashboard', icon: LayoutDashboard },
+        { path: '/nurse/patients', label: 'Assigned Patients', icon: Users },
+        { path: '/nurse/vitals', label: 'Vital Signs Monitor', icon: Activity },
+        { path: '/nurse/medications', label: 'Medication (eMAR)', icon: Pill },
+        { path: '/nurse/tasks', label: 'Nursing Tasks', icon: ClipboardList },
+        { path: '/nurse/notes', label: 'Clinical Notes', icon: FileText },
+      ],
+    },
+    {
+      group: 'WARD & SCHEDULE',
+      items: [
+        { path: '/nurse/schedule', label: 'Care Schedule', icon: CalendarDays },
+        { path: '/nurse/wards', label: 'Wards & Beds', icon: BedDouble },
+        { path: '/nurse/doctor-communication', label: 'Doctor Comms', icon: MessageSquare },
+        { path: '/nurse/emergency', label: 'Emergency Alerts', icon: Siren },
+      ],
+    },
+    {
+      group: 'SHIFT & ACCOUNT',
+      items: [
+        { path: '/nurse/shifts', label: 'Shifts & Handover', icon: Clock },
+        { path: '/nurse/reports', label: 'Nursing Reports', icon: BarChart3 },
+        { path: '/nurse/profile', label: 'My Profile', icon: User },
       ],
     },
   ];
@@ -216,6 +251,7 @@ export default function Sidebar() {
 
   const isDoctor = user?.role === 'doctor';
   const isPatient = user?.role === 'patient';
+  const isNurse = user?.role === 'nurse';
   const visibleStandardItems = standardMenuItems.filter((item) =>
     item.roles.includes(user?.role || '')
   );
@@ -353,6 +389,54 @@ export default function Sidebar() {
                 ))}
 
                 {/* Patient Logout Button */}
+                <div className="pt-2 border-t border-[#173860]">
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="w-full flex items-center space-x-3 rounded-xl px-3.5 py-2 text-xs font-semibold text-rose-300 hover:bg-rose-500/20 hover:text-rose-100 transition text-left"
+                  >
+                    <LogOut size={17} className="shrink-0 text-rose-400" />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              </>
+            ) : isNurse ? (
+              <>
+                {nurseMenuItems.map((section) => (
+                  <div key={section.group} className="space-y-1">
+                    <div className="px-3 pt-2 pb-1 text-[10px] font-extrabold uppercase tracking-widest text-slate-400/90">
+                      {section.group}
+                    </div>
+                    {section.items.map((item) => {
+                      const Icon = item.icon;
+                      const active = isActive(item.path);
+                      return (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          className={`flex items-center space-x-3 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all duration-200 group ${
+                            active
+                              ? 'bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg shadow-teal-500/25 ring-1 ring-teal-300/30'
+                              : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                          }`}
+                        >
+                          <Icon
+                            size={17}
+                            className={`shrink-0 transition-transform group-hover:scale-110 ${
+                              active ? 'text-white' : 'text-teal-400 group-hover:text-teal-300'
+                            }`}
+                          />
+                          <span className="truncate">{item.label}</span>
+                          {active && (
+                            <span className="ml-auto h-1.5 w-1.5 rounded-full bg-white shadow-sm" />
+                          )}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ))}
+
+                {/* Nurse Logout Button */}
                 <div className="pt-2 border-t border-[#173860]">
                   <button
                     type="button"

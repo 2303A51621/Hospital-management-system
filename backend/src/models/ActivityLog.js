@@ -45,6 +45,8 @@ const activityLogSchema = new mongoose.Schema(
         'ai-chat',
         'report',
         'pharmacy',
+        'nurse',
+        'communication',
       ],
       required: true,
     },

@@ -12,6 +12,7 @@
     "seed:medical-knowledge": "node src/data/seedMedicalKnowledge.js",
     "seed:wards": "node src/data/seedWards.js",
     "seed:medicines": "node src/data/seedMedicines.js",
+    "seed:nurse": "node scripts/ensureDemoNurseAndData.js",
     "doctors:24-hours": "node src/data/setAllDoctors24HourAvailability.js",
     "photos:doctors": "node src/data/applyDoctorPhotos.js",
     "migrate-local-to-atlas": "node scripts/migrate-local-to-atlas.js",

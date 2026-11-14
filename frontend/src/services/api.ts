@@ -748,4 +748,171 @@ export const patientPortalAPI = {
     api.get<{ success: boolean; data: any }>('/patient-portal/health-overview'),
 };
 
+export const nursePortalAPI = {
+  // 1. Dashboard
+  getDashboard: () =>
+    api.get<{ success: boolean; data: any }>('/nurse-portal/dashboard'),
+
+  // 2. Patient Management
+  getPatients: (params: { search?: string; ward?: string; priority?: string; status?: string } = {}) =>
+    api.get<{ success: boolean; data: any[]; count: number }>(`/nurse-portal/patients?${toSearchParams(params)}`),
+  getPatientCareDetail: (patientId: string) =>
+    api.get<{ success: boolean; data: any }>(`/nurse-portal/patients/${patientId}`),
+
+  // 3. Vital Signs Monitoring
+  getPatientVitals: (patientId: string) =>
+    api.get<{ success: boolean; data: any[]; count: number }>(`/nurse-portal/vitals/${patientId}`),
+  recordVitals: (data: {
+    patientId: string;
+    temperature: number;
+    bloodPressure: { systolic: number; diastolic: number };
+    heartRate: number;
+    respiratoryRate: number;
+    oxygenSaturation: number;
+    bloodGlucose?: number;
+    bloodGlucoseType?: string;
+    height?: number;
+    weight?: number;
+    painScore?: number;
+    notes?: string;
+    notifyDoctor?: boolean;
+    doctorId?: string;
+  }) => api.post<{ success: boolean; data: any; message: string }>('/nurse-portal/vitals', data),
+
+  // 4. Medication Administration (eMAR)
+  getMedications: (params: { patientId?: string; status?: string } = {}) =>
+    api.get<{
+      success: boolean;
+      data: {
+        scheduledMedications: any[];
+        administrationLogs: any[];
+        activePrescriptionsCount: number;
+      };
+    }>(`/nurse-portal/medications?${toSearchParams(params)}`),
+  administerMedication: (data: {
+    patientId: string;
+    prescriptionId?: string;
+    medicineName: string;
+    dosage: string;
+    route?: string;
+    frequency?: string;
+    status: 'administered' | 'missed' | 'delayed' | 'refused';
+    reasonForMissedOrRefused?: string;
+    safetyChecksVerified?: {
+      rightPatient: boolean;
+      rightMedication: boolean;
+      rightDose: boolean;
+      rightRoute: boolean;
+      rightTime: boolean;
+      allergyChecked: boolean;
+    };
+    vitalSignsPreAdministration?: { bloodPressure?: string; heartRate?: number; notes?: string };
+    notes?: string;
+  }) => api.post<{ success: boolean; data: any; message: string }>('/nurse-portal/medications/administer', data),
+
+  // 5. Nursing Tasks
+  getTasks: (params: { category?: string; priority?: string; status?: string; patientId?: string } = {}) =>
+    api.get<{ success: boolean; data: any[]; count: number }>(`/nurse-portal/tasks?${toSearchParams(params)}`),
+  createTask: (data: {
+    patientId: string;
+    title: string;
+    description?: string;
+    category?: string;
+    priority?: string;
+    dueDate?: string;
+  }) => api.post<{ success: boolean; data: any; message: string }>('/nurse-portal/tasks', data),
+  updateTaskStatus: (id: string, data: { status: string; completionNotes?: string }) =>
+    api.put<{ success: boolean; data: any; message: string }>(`/nurse-portal/tasks/${id}/status`, data),
+
+  // 6. Nursing Notes & Clinical Documentation
+  getNotes: (patientId: string) =>
+    api.get<{ success: boolean; data: any[]; count: number }>(`/nurse-portal/notes/${patientId}`),
+  createNote: (data: {
+    patientId: string;
+    noteType?: string;
+    patientComplaints?: string;
+    observedSymptoms?: string;
+    patientCondition?: string;
+    treatmentAndCareProvided: string;
+    woundObservations?: string;
+    patientResponse?: string;
+    followUpPlan?: string;
+  }) => api.post<{ success: boolean; data: any; message: string }>('/nurse-portal/notes', data),
+  amendNote: (id: string, data: { amendmentNote: string; reason?: string }) =>
+    api.post<{ success: boolean; data: any; message: string }>(`/nurse-portal/notes/${id}/amend`, data),
+
+  // 7. Doctor Communication
+  getDoctors: () =>
+    api.get<{ success: boolean; data: any[]; count: number }>('/nurse-portal/doctors'),
+  getDoctorCommunication: () =>
+    api.get<{ success: boolean; data: any[] }>('/nurse-portal/communication'),
+  sendDoctorCommunication: (data: {
+    doctorUserId: string;
+    patientId?: string;
+    subject?: string;
+    message: string;
+    isUrgent?: boolean;
+  }) => api.post<{ success: boolean; data: any; message: string }>('/nurse-portal/communication', data),
+
+  // 8. Ward & Bed Management
+  getWardsAndBeds: () =>
+    api.get<{ success: boolean; data: any[] }>('/nurse-portal/wards-beds'),
+
+  // 9. Patient Care Schedule
+  getCareSchedule: () =>
+    api.get<{ success: boolean; data: any[]; count: number }>('/nurse-portal/schedule'),
+
+  // 10. Emergency Management
+  getEmergencyAlerts: () =>
+    api.get<{ success: boolean; data: any[]; count: number }>('/nurse-portal/emergency/alerts'),
+  triggerEmergencyAlert: (data: {
+    patientId: string;
+    alertType: string;
+    severity?: string;
+    location?: { ward?: string; roomNumber?: string; bedNumber?: string };
+    symptoms: string;
+    vitalsAtAlert?: { bp?: string; pulse?: number; spo2?: number; temp?: number; rr?: number };
+    actionsTaken?: string;
+  }) => api.post<{ success: boolean; data: any; message: string }>('/nurse-portal/emergency/alerts', data),
+  resolveEmergencyAlert: (id: string, data: { status?: string; resolutionNotes?: string; doctorResponseTimeMinutes?: number }) =>
+    api.put<{ success: boolean; data: any; message: string }>(`/nurse-portal/emergency/alerts/${id}/resolve`, data),
+
+  // 11. Shift Management & Handover
+  getShiftStatus: () =>
+    api.get<{ success: boolean; data: any }>('/nurse-portal/shifts/status'),
+  clockInOut: (data: { action?: 'clock_in' | 'clock_out' | 'toggle'; notes?: string } = {}) =>
+    api.post<{ success: boolean; data: any; message: string }>('/nurse-portal/shifts/clock', data),
+  getShiftHandovers: () =>
+    api.get<{ success: boolean; data: any[]; count: number }>('/nurse-portal/shifts/handovers'),
+  createShiftHandover: (data: {
+    incomingNurseId?: string;
+    outgoingShift?: string;
+    incomingShift?: string;
+    handoverSummary: string;
+    criticalPatientObservations?: any[];
+    pendingMedications?: string[];
+    pendingTasks?: string[];
+  }) => api.post<{ success: boolean; data: any; message: string }>('/nurse-portal/shifts/handovers', data),
+  acknowledgeShiftHandover: (id: string, data: { acknowledgementNotes?: string } = {}) =>
+    api.put<{ success: boolean; data: any; message: string }>(`/nurse-portal/shifts/handovers/${id}/acknowledge`, data),
+
+  // 12. Notifications
+  getNotifications: () =>
+    api.get<{ success: boolean; data: any[]; unreadCount: number }>('/nurse-portal/notifications'),
+  markNotificationRead: (id: string) =>
+    api.put<{ success: boolean }>(`/nurse-portal/notifications/${id}/read`),
+  markAllNotificationsRead: () =>
+    api.put<{ success: boolean }>('/nurse-portal/notifications/read-all'),
+
+  // 13. Profile Management
+  getProfile: () =>
+    api.get<{ success: boolean; data: any }>('/nurse-portal/profile'),
+  updateProfile: (data: { phone?: string; emergencyContact?: string; currentPassword?: string; newPassword?: string }) =>
+    api.put<{ success: boolean; data: any; message: string }>('/nurse-portal/profile', data),
+
+  // 14. Reports & Analytics
+  getReports: (params: { type: string; startDate?: string; endDate?: string; patientId?: string }) =>
+    api.get<{ success: boolean; reportType: string; timeframe: any; data: any }>(`/nurse-portal/reports?${toSearchParams(params)}`),
+};
+
 export default api;

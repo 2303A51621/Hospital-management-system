@@ -69,6 +69,7 @@ app.use('/api/ai/chat', require('./src/routes/aiChatRoutes'));
 app.use('/api/ai-chat', require('./src/routes/aiChatRoutes'));
 app.use('/api/doctor-portal', require('./src/routes/doctorPortalRoutes'));
 app.use('/api/patient-portal', require('./src/routes/patientPortalRoutes'));
+app.use('/api/nurse-portal', require('./src/routes/nursePortalRoutes'));
 
 app.use(notFound);
 app.use(errorHandler);

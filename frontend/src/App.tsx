@@ -62,6 +62,21 @@ import PatientProfilePage from './pages/patient/PatientProfilePage';
 import PatientHealthOverviewPage from './pages/patient/PatientHealthOverviewPage';
 import PatientSettingsPage from './pages/patient/PatientSettingsPage';
 
+// Nurse Role Module Pages
+import NurseDashboardPage from './pages/nurse/NurseDashboardPage';
+import NursePatientsPage from './pages/nurse/NursePatientsPage';
+import NurseVitalsPage from './pages/nurse/NurseVitalsPage';
+import NurseMedicationsPage from './pages/nurse/NurseMedicationsPage';
+import NurseTasksPage from './pages/nurse/NurseTasksPage';
+import NurseNotesPage from './pages/nurse/NurseNotesPage';
+import NurseSchedulePage from './pages/nurse/NurseSchedulePage';
+import NurseWardsPage from './pages/nurse/NurseWardsPage';
+import NurseDoctorCommsPage from './pages/nurse/NurseDoctorCommsPage';
+import NurseEmergencyPage from './pages/nurse/NurseEmergencyPage';
+import NurseShiftsPage from './pages/nurse/NurseShiftsPage';
+import NurseReportsPage from './pages/nurse/NurseReportsPage';
+import NurseProfilePage from './pages/nurse/NurseProfilePage';
+
 export default function App() {
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
@@ -81,6 +96,10 @@ export default function App() {
             token ? (
               user?.role === 'doctor' ? (
                 <Navigate to="/doctor/dashboard" />
+              ) : user?.role === 'nurse' ? (
+                <Navigate to="/nurse/dashboard" />
+              ) : user?.role === 'patient' ? (
+                <Navigate to="/patient/dashboard" />
               ) : (
                 <Navigate to="/dashboard" />
               )
@@ -95,6 +114,10 @@ export default function App() {
             token ? (
               user?.role === 'doctor' ? (
                 <Navigate to="/doctor/dashboard" />
+              ) : user?.role === 'nurse' ? (
+                <Navigate to="/nurse/dashboard" />
+              ) : user?.role === 'patient' ? (
+                <Navigate to="/patient/dashboard" />
               ) : (
                 <Navigate to="/dashboard" />
               )
@@ -109,6 +132,10 @@ export default function App() {
             token ? (
               user?.role === 'doctor' ? (
                 <Navigate to="/doctor/dashboard" />
+              ) : user?.role === 'nurse' ? (
+                <Navigate to="/nurse/dashboard" />
+              ) : user?.role === 'patient' ? (
+                <Navigate to="/patient/dashboard" />
               ) : (
                 <Navigate to="/dashboard" />
               )
@@ -127,6 +154,8 @@ export default function App() {
                 <AdminDashboardPage />
               ) : user?.role === 'doctor' ? (
                 <DoctorDashboardPage />
+              ) : user?.role === 'nurse' ? (
+                <NurseDashboardPage />
               ) : user?.role === 'patient' ? (
                 <PatientDashboardPage />
               ) : (
@@ -530,6 +559,112 @@ export default function App() {
           element={
             <ProtectedRoute requiredRoles={['admin', 'super_admin']}>
               <AdminManagementPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Section: Dedicated Nurse Role Module Routes */}
+        <Route
+          path="/nurse/dashboard"
+          element={
+            <ProtectedRoute requiredRoles={['nurse', 'admin', 'super_admin']}>
+              <NurseDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/nurse/patients"
+          element={
+            <ProtectedRoute requiredRoles={['nurse', 'admin', 'super_admin']}>
+              <NursePatientsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/nurse/vitals"
+          element={
+            <ProtectedRoute requiredRoles={['nurse', 'admin', 'super_admin']}>
+              <NurseVitalsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/nurse/medications"
+          element={
+            <ProtectedRoute requiredRoles={['nurse', 'admin', 'super_admin']}>
+              <NurseMedicationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/nurse/tasks"
+          element={
+            <ProtectedRoute requiredRoles={['nurse', 'admin', 'super_admin']}>
+              <NurseTasksPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/nurse/notes"
+          element={
+            <ProtectedRoute requiredRoles={['nurse', 'admin', 'super_admin']}>
+              <NurseNotesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/nurse/schedule"
+          element={
+            <ProtectedRoute requiredRoles={['nurse', 'admin', 'super_admin']}>
+              <NurseSchedulePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/nurse/wards"
+          element={
+            <ProtectedRoute requiredRoles={['nurse', 'admin', 'super_admin']}>
+              <NurseWardsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/nurse/doctor-communication"
+          element={
+            <ProtectedRoute requiredRoles={['nurse', 'admin', 'super_admin']}>
+              <NurseDoctorCommsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/nurse/emergency"
+          element={
+            <ProtectedRoute requiredRoles={['nurse', 'admin', 'super_admin']}>
+              <NurseEmergencyPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/nurse/shifts"
+          element={
+            <ProtectedRoute requiredRoles={['nurse', 'admin', 'super_admin']}>
+              <NurseShiftsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/nurse/reports"
+          element={
+            <ProtectedRoute requiredRoles={['nurse', 'admin', 'super_admin']}>
+              <NurseReportsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/nurse/profile"
+          element={
+            <ProtectedRoute requiredRoles={['nurse', 'admin', 'super_admin']}>
+              <NurseProfilePage />
             </ProtectedRoute>
           }
         />

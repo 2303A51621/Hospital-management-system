@@ -24,6 +24,15 @@ const MedicalKnowledge = require('./MedicalKnowledge');
 const ActivityLog = require('./ActivityLog');
 const AIChatAudit = require('./AIChatAudit');
 const AIChatSession = require('./AIChatSession');
+const Nurse = require('./Nurse');
+const NurseAssignment = require('./NurseAssignment');
+const VitalSign = require('./VitalSign');
+const MedicationAdministration = require('./MedicationAdministration');
+const NursingTask = require('./NursingTask');
+const NursingNote = require('./NursingNote');
+const ShiftHandover = require('./ShiftHandover');
+const NurseShiftAttendance = require('./NurseShiftAttendance');
+const NurseEmergencyAlert = require('./NurseEmergencyAlert');
 
 module.exports = {
   User,
@@ -51,5 +60,14 @@ module.exports = {
   ActivityLog,
   AIChatAudit,
   AIChatSession,
+  Nurse,
+  NurseAssignment,
+  VitalSign,
+  MedicationAdministration,
+  NursingTask,
+  NursingNote,
+  ShiftHandover,
+  NurseShiftAttendance,
+  NurseEmergencyAlert,
 };
 
