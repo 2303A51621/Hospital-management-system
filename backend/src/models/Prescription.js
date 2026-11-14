@@ -49,19 +49,23 @@ const prescriptionSchema = new mongoose.Schema(
         },
         medicineName: {
           type: String,
-          required: true,
+          required: false,
+        },
+        name: {
+          type: String,
+          required: false,
         },
         dosage: {
           type: String, // e.g. "500 mg" or "1 tablet"
-          required: true,
+          default: '1 tablet',
         },
         frequency: {
           type: String, // e.g. "once daily", "twice daily"
-          required: true,
+          default: 'Once daily',
         },
         duration: {
           type: String, // e.g. "5 days"
-          required: true,
+          default: '5 days',
         },
         quantity: {
           type: Number,
@@ -71,7 +75,15 @@ const prescriptionSchema = new mongoose.Schema(
           type: String, // e.g. "After food"
           default: 'After food',
         },
+        timing: {
+          type: String,
+          default: 'after_food',
+        },
         alternativeMedicine: {
+          type: String,
+          default: '',
+        },
+        alternatives: {
           type: String,
           default: '',
         },
@@ -89,6 +101,34 @@ const prescriptionSchema = new mongoose.Schema(
       default: 'active',
     },
     notes: String,
+    fileUrl: {
+      type: String,
+      default: '',
+    },
+    fileName: {
+      type: String,
+      default: '',
+    },
+    fileType: {
+      type: String,
+      default: '',
+    },
+    fileSize: {
+      type: Number,
+      default: 0,
+    },
+    attachments: [
+      {
+        fileUrl: String,
+        fileName: String,
+        fileType: String,
+        fileSize: Number,
+        uploadedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
     digitalSignature: String,
     allergiesChecked: {
       type: Boolean,
@@ -101,6 +141,21 @@ const prescriptionSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Pre-validation normalization hook so neither medicineName nor name is ever missing
+prescriptionSchema.pre('validate', function () {
+  if (this.medicines && Array.isArray(this.medicines)) {
+    this.medicines.forEach((m) => {
+      const medName = (m.medicineName || m.name || '').trim();
+      m.medicineName = medName || 'Prescribed Medication';
+      m.name = medName || 'Prescribed Medication';
+      if (!m.dosage) m.dosage = '1 tablet';
+      if (!m.frequency) m.frequency = 'Once daily';
+      if (!m.duration) m.duration = '5 days';
+      if (!m.instructions) m.instructions = m.timing || 'After food';
+    });
+  }
+});
 
 prescriptionSchema.index({ doctorId: 1, prescriptionDate: -1 });
 prescriptionSchema.index({ patientId: 1, prescriptionDate: -1 });

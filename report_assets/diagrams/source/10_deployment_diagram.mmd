@@ -1,0 +1,21 @@
+graph LR
+    subgraph Client_Tier["Client Devices"]
+        Browser["Desktop & Mobile Web Browsers"]
+    end
+
+    subgraph Cloud_Tier["Render Cloud Platform"]
+        App["Node.js 22 / Express 5 API Server"]
+        Static["Vite Production Frontend Bundle"]
+    end
+
+    subgraph Data_Tier["External Services & DB"]
+        Atlas[("MongoDB Atlas (AWS Mumbai)")]
+        Gemini["Google Gemini 2.5 API"]
+        Razorpay["Razorpay Payment Gateway"]
+    end
+
+    Browser -->|HTTPS / WSS| App
+    Browser -->|HTTPS| Static
+    App -->|Mongoose Wire Protocol| Atlas
+    App -->|HTTPS REST| Gemini
+    App -->|HTTPS REST| Razorpay

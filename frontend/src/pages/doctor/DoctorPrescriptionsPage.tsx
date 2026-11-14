@@ -11,6 +11,10 @@ import {
   Pill,
   RefreshCw,
   Calendar,
+  Upload,
+  FileUp,
+  FileCheck,
+  Download,
 } from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
@@ -19,6 +23,7 @@ import toast from 'react-hot-toast';
 
 interface MedicineItem {
   name: string;
+  medicineName?: string;
   dosage: string;
   frequency: string;
   duration: string;
@@ -42,6 +47,7 @@ export default function DoctorPrescriptionsPage() {
   const [medicines, setMedicines] = useState<MedicineItem[]>([
     {
       name: 'Amoxicillin',
+      medicineName: 'Amoxicillin',
       dosage: '500mg',
       frequency: 'TDS (3 times/day)',
       duration: '5 days',
@@ -51,6 +57,10 @@ export default function DoctorPrescriptionsPage() {
       alternatives: 'Azithromycin 500mg',
     },
   ]);
+
+  // File upload state for attached Prescription PDF / document
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileBase64, setFileBase64] = useState<string>('');
 
   // Safety alerts state
   const [safetyChecking, setSafetyChecking] = useState(false);
@@ -115,6 +125,7 @@ export default function DoctorPrescriptionsPage() {
       ...medicines,
       {
         name: '',
+        medicineName: '',
         dosage: '1 tablet',
         frequency: 'BD (Twice daily)',
         duration: '5 days',
@@ -137,10 +148,36 @@ export default function DoctorPrescriptionsPage() {
   const handleMedicineChange = (idx: number, field: keyof MedicineItem, val: any) => {
     const updated = [...medicines];
     updated[idx] = { ...updated[idx], [field]: val };
+    if (field === 'name') {
+      updated[idx].medicineName = val;
+    }
     setMedicines(updated);
     if (field === 'name') {
       runSafetyCheck(updated, selectedPatientId);
     }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 15 * 1024 * 1024) {
+      toast.error('File size must be under 15MB');
+      return;
+    }
+    setSelectedFile(file);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setFileBase64(reader.result as string);
+    };
+    reader.onerror = () => {
+      toast.error('Failed to read file');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
+    setFileBase64('');
   };
 
   const handlePatientSelect = (patId: string) => {
@@ -154,18 +191,32 @@ export default function DoctorPrescriptionsPage() {
       toast.error('Please select a patient');
       return;
     }
-    const validMeds = medicines.filter((m) => m.name.trim().length > 0);
-    if (validMeds.length === 0) {
-      toast.error('Please add at least one medicine');
+    const validMeds = medicines
+      .filter((m) => (m.name || m.medicineName || '').trim().length > 0)
+      .map((m) => {
+        const title = (m.medicineName || m.name || '').trim();
+        return {
+          ...m,
+          name: title,
+          medicineName: title,
+        };
+      });
+
+    if (validMeds.length === 0 && !fileBase64 && !selectedFile) {
+      toast.error('Please add at least one medicine or attach a prescription PDF');
       return;
     }
 
     try {
       const payload = {
         patientId: selectedPatientId,
-        diagnosis,
+        diagnosis: diagnosis || 'General Clinical Consultation',
         instructions: prescriptionNotes,
         medicines: validMeds,
+        fileUrl: fileBase64 || undefined,
+        fileName: selectedFile?.name || undefined,
+        fileType: selectedFile?.type || (fileBase64 ? 'application/pdf' : undefined),
+        fileSize: selectedFile?.size || undefined,
         digitalSignature: useSignature ? doctorProfile?.digitalSignature || 'Dr. ' + (doctorProfile?.name || 'Verified Signature') : undefined,
       };
 
@@ -175,9 +226,12 @@ export default function DoctorPrescriptionsPage() {
       // Reset form
       setDiagnosis('');
       setPrescriptionNotes('');
+      setSelectedFile(null);
+      setFileBase64('');
       setMedicines([
         {
           name: '',
+          medicineName: '',
           dosage: '500mg',
           frequency: 'BD',
           duration: '5 days',
@@ -383,6 +437,25 @@ export default function DoctorPrescriptionsPage() {
                         {rx.instructions && (
                           <div className="text-xs text-slate-600 italic bg-amber-50/60 p-2 rounded border border-amber-100 mb-3">
                             Notes: {rx.instructions}
+                          </div>
+                        )}
+
+                        {/* Attached Prescription File / PDF */}
+                        {rx.fileUrl && (
+                          <div className="mb-3 p-2.5 rounded-lg bg-teal-50/80 border border-teal-200 flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 text-xs text-teal-900 font-semibold truncate">
+                              <FileText className="w-4 h-4 text-teal-700 shrink-0" />
+                              <span className="truncate">{rx.fileName || 'Attached Prescription PDF'}</span>
+                            </div>
+                            <a
+                              href={rx.fileUrl}
+                              download={rx.fileName || 'Prescription.pdf'}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-[11px] font-bold text-teal-800 hover:text-teal-900 bg-white px-2.5 py-1 rounded-md border border-teal-300 shadow-sm shrink-0 transition"
+                            >
+                              <Download className="w-3 h-3" /> View / Download PDF
+                            </a>
                           </div>
                         )}
                       </div>
@@ -648,6 +721,63 @@ export default function DoctorPrescriptionsPage() {
                 />
               </div>
 
+              {/* Upload Prescription PDF / Document File */}
+              <div className="p-4 rounded-xl border-2 border-dashed border-teal-200 bg-teal-50/40 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileUp className="w-5 h-5 text-teal-600" />
+                    <div>
+                      <label className="block text-xs font-bold text-slate-800 uppercase">
+                        Upload Prescription PDF / Document (Optional)
+                      </label>
+                      <p className="text-[11px] text-slate-500">
+                        Upload signed PDF or prescription slip. It will immediately appear in the patient's Medical Reports and Records.
+                      </p>
+                    </div>
+                  </div>
+                  {selectedFile && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveFile}
+                      className="text-xs text-rose-600 hover:text-rose-700 font-semibold flex items-center gap-1"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" /> Remove
+                    </button>
+                  )}
+                </div>
+
+                {!selectedFile ? (
+                  <label className="flex flex-col items-center justify-center p-4 border border-dashed border-teal-300 rounded-lg cursor-pointer bg-white hover:bg-teal-50/70 transition group">
+                    <Upload className="w-6 h-6 text-teal-600 group-hover:scale-110 transition mb-1" />
+                    <span className="text-xs font-semibold text-teal-900">Click to upload Prescription PDF or Image</span>
+                    <span className="text-[10px] text-slate-400 mt-0.5">Supports PDF, PNG, JPG, JPEG up to 15MB</span>
+                    <input
+                      type="file"
+                      accept=".pdf,image/*,.doc,.docx"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </label>
+                ) : (
+                  <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-teal-200">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <FileCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-slate-800 truncate">
+                          {selectedFile.name}
+                        </div>
+                        <div className="text-[10px] text-slate-400">
+                          {(selectedFile.size / 1024).toFixed(1)} KB • Ready to link to patient medical reports
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 shrink-0">
+                      Attached ✓
+                    </span>
+                  </div>
+                )}
+              </div>
+
               {/* Digital Signature Confirmation */}
               <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -822,6 +952,30 @@ export default function DoctorPrescriptionsPage() {
                 <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs">
                   <span className="font-bold text-slate-700 block mb-1">Doctor's Clinical Advice:</span>
                   <p className="text-slate-600">{printModalPrescription.instructions}</p>
+                </div>
+              )}
+
+              {/* Attached Prescription PDF file */}
+              {printModalPrescription.fileUrl && (
+                <div className="p-3 rounded-xl bg-teal-50 border border-teal-200 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-teal-700" />
+                    <div>
+                      <div className="text-xs font-bold text-slate-900">
+                        {printModalPrescription.fileName || 'Official Prescription File'}
+                      </div>
+                      <div className="text-[10px] text-slate-500">Original signed doctor prescription</div>
+                    </div>
+                  </div>
+                  <a
+                    href={printModalPrescription.fileUrl}
+                    download={printModalPrescription.fileName || 'Prescription.pdf'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold shadow-sm"
+                  >
+                    <Download className="w-3.5 h-3.5" /> Download Attached PDF
+                  </a>
                 </div>
               )}
 

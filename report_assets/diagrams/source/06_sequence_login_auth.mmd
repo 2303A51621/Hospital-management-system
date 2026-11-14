@@ -1,0 +1,16 @@
+sequenceDiagram
+    autonumber
+    actor User as User / Client
+    participant Frontend as React UI (Zustand)
+    participant Backend as Express Auth Controller
+    participant DB as MongoDB Atlas
+
+    User->>Frontend: Enters credentials & submits login
+    Frontend->>Backend: POST /api/auth/login { email, password }
+    Backend->>DB: User.findOne({ email }).select('+password')
+    DB-->>Backend: User document
+    Backend->>Backend: bcrypt.compare(password, user.password)
+    Backend->>Backend: jwt.sign({ id, role }, JWT_SECRET)
+    Backend-->>Frontend: 200 OK { token, user }
+    Frontend->>Frontend: Store token in localStorage & Zustand
+    Frontend-->>User: Navigate to Role Dashboard

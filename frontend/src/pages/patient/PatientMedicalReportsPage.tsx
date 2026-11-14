@@ -8,6 +8,9 @@ import {
   RefreshCw,
   Printer,
   CheckCircle2,
+  Pill,
+  FileText,
+  FileCheck,
 } from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
@@ -76,9 +79,15 @@ export default function PatientMedicalReportsPage() {
   };
 
   const filteredReports = reports.filter((r) => {
-    if (typeFilter !== 'all' && (r.testType || '').toLowerCase() !== typeFilter.toLowerCase()) return false;
+    if (typeFilter !== 'all') {
+      if (typeFilter === 'prescription') {
+        if (!r.isPrescription && (r.testType || '').toLowerCase() !== 'prescription') return false;
+      } else {
+        if ((r.testType || '').toLowerCase() !== typeFilter.toLowerCase() && (r.testCategory || '').toLowerCase() !== typeFilter.toLowerCase()) return false;
+      }
+    }
     const name = (r.testName || '').toLowerCase();
-    const doc = (r.doctorId?.userId?.name || '').toLowerCase();
+    const doc = (r.doctorId?.userId?.name || r.doctorName || '').toLowerCase();
     const q = search.toLowerCase();
     return name.includes(q) || doc.includes(q);
   });
@@ -119,7 +128,8 @@ export default function PatientMedicalReportsPage() {
             <div className="clinical-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100 rounded-xl">
                 {[
-                  { id: 'all', label: 'All Tests' },
+                  { id: 'all', label: 'All Records' },
+                  { id: 'prescription', label: 'Prescriptions (Rx)' },
                   { id: 'blood', label: 'Blood Tests' },
                   { id: 'imaging', label: 'Scans & X-Rays' },
                   { id: 'urine', label: 'Urine / Pathology' },
@@ -162,15 +172,16 @@ export default function PatientMedicalReportsPage() {
               {/* Reports List */}
               <div className="space-y-3">
                 {loading ? (
-                  <div className="py-12 text-center text-slate-400 text-xs">Loading laboratory investigations...</div>
+                  <div className="py-12 text-center text-slate-400 text-xs">Loading laboratory investigations & prescriptions...</div>
                 ) : filteredReports.length === 0 ? (
                   <div className="clinical-card p-8 text-center text-xs text-slate-400">
-                    No laboratory reports found
+                    No medical reports or prescriptions found
                   </div>
                 ) : (
                   filteredReports.map((report) => {
                     const isSelected = selectedReport?._id === report._id;
-                    const isCompleted = report.status === 'completed';
+                    const isCompleted = report.status === 'completed' || report.status === 'active';
+                    const isRx = report.isPrescription || report.testType === 'Prescription';
 
                     return (
                       <div
@@ -183,8 +194,9 @@ export default function PatientMedicalReportsPage() {
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <span className="font-mono text-[10px] text-slate-400 uppercase">
-                            #{report._id.slice(-6).toUpperCase()}
+                          <span className="font-mono text-[10px] text-slate-400 uppercase flex items-center gap-1">
+                            {isRx ? <Pill size={12} className="text-teal-600" /> : <FlaskConical size={12} className="text-slate-400" />}
+                            {report.prescriptionId ? `#${report.prescriptionId}` : `#${report._id.slice(-6).toUpperCase()}`}
                           </span>
                           <span
                             className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase border ${
@@ -199,12 +211,18 @@ export default function PatientMedicalReportsPage() {
 
                         <h4 className="text-sm font-bold text-slate-900 mt-1 truncate">{report.testName}</h4>
                         <p className="text-xs text-slate-500 mt-0.5">
-                          {report.testType || 'Diagnostic'} • {new Date(report.createdAt || report.date).toLocaleDateString()}
+                          {report.testType || 'Diagnostic'} • {new Date(report.createdAt || report.date || report.orderDate).toLocaleDateString()}
                         </p>
+
+                        {report.fileUrl && (
+                          <div className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                            <FileText size={11} /> Attached Document Available
+                          </div>
+                        )}
 
                         <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
                           <span className="text-slate-600">
-                            Dr. {report.doctorId?.userId?.name || 'Referred Physician'}
+                            Dr. {report.doctorId?.userId?.name || report.doctorName || 'Attending Physician'}
                           </span>
                           <span className="text-teal-700 font-bold">Inspect →</span>
                         </div>
@@ -218,7 +236,7 @@ export default function PatientMedicalReportsPage() {
               <div className="lg:col-span-2">
                 {!selectedReport ? (
                   <div className="clinical-card p-12 text-center text-slate-400 text-xs">
-                    Select an investigation to view detailed parameters and clinician comments.
+                    Select an investigation or prescription to view detailed parameters and clinician comments.
                   </div>
                 ) : (
                   <div className="clinical-card p-6 sm:p-8 space-y-6 bg-white border border-slate-200">
@@ -226,12 +244,20 @@ export default function PatientMedicalReportsPage() {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
                       <div>
                         <div className="inline-flex items-center gap-1.5 text-xs font-bold text-teal-700 bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-200 mb-1">
-                          <FlaskConical size={12} /> {selectedReport.testType || 'Laboratory Investigation'}
+                          {selectedReport.isPrescription || selectedReport.testType === 'Prescription' ? (
+                            <>
+                              <Pill size={12} className="text-teal-700" /> Medical Prescription
+                            </>
+                          ) : (
+                            <>
+                              <FlaskConical size={12} /> {selectedReport.testType || 'Laboratory Investigation'}
+                            </>
+                          )}
                         </div>
                         <h2 className="text-xl font-black text-slate-900">{selectedReport.testName}</h2>
                         <p className="text-xs text-slate-500">
-                          Referred by: Dr. {selectedReport.doctorId?.userId?.name || 'Attending Physician'} • Ordered on{' '}
-                          {new Date(selectedReport.createdAt).toLocaleDateString()}
+                          Referred by: Dr. {selectedReport.doctorId?.userId?.name || selectedReport.doctorName || 'Attending Physician'} • Ordered on{' '}
+                          {new Date(selectedReport.createdAt || selectedReport.date || selectedReport.orderDate).toLocaleDateString()}
                         </p>
                       </div>
 
@@ -243,7 +269,20 @@ export default function PatientMedicalReportsPage() {
                           <Printer size={14} /> Print
                         </button>
                         <button
-                          onClick={() => window.print()}
+                          onClick={() => {
+                            if (selectedReport.fileUrl) {
+                              const link = document.createElement('a');
+                              link.href = selectedReport.fileUrl;
+                              link.download = selectedReport.fileName || 'MedicalReport.pdf';
+                              link.target = '_blank';
+                              link.rel = 'noopener noreferrer';
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                            } else {
+                              window.print();
+                            }
+                          }}
                           className="px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold shadow-md shadow-teal-700/20 flex items-center gap-1.5"
                         >
                           <Download size={14} /> Download PDF
@@ -251,20 +290,56 @@ export default function PatientMedicalReportsPage() {
                       </div>
                     </div>
 
-                    {/* Investigation Results Table */}
+                    {/* Attached Prescription / Diagnostic File Banner */}
+                    {selectedReport.fileUrl && (
+                      <div className="p-4 rounded-2xl bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-teal-600/30">
+                            <FileCheck size={20} />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold text-slate-900 truncate">
+                              {selectedReport.fileName || 'Attached Prescription / Medical Document (PDF)'}
+                            </div>
+                            <div className="text-[11px] text-teal-800 font-medium">
+                              Doctor uploaded prescription file • Official verified document
+                            </div>
+                          </div>
+                        </div>
+                        <a
+                          href={selectedReport.fileUrl}
+                          download={selectedReport.fileName || 'Prescription.pdf'}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold shadow-md shadow-teal-700/20 shrink-0 transition"
+                        >
+                          <Download size={14} /> View / Download Attached PDF
+                        </a>
+                      </div>
+                    )}
+
+                    {/* Investigation / Medication Results Table */}
                     <div>
                       <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-3">
-                        Parametric Test Results
+                        {selectedReport.isPrescription || selectedReport.testType === 'Prescription'
+                          ? 'Prescribed Medications & Regimen'
+                          : 'Parametric Test Results'}
                       </h3>
 
                       <div className="overflow-x-auto rounded-xl border border-slate-200">
                         <table className="w-full text-left text-xs">
                           <thead className="bg-slate-50 text-slate-600 font-bold uppercase text-[10px] border-b border-slate-200">
                             <tr>
-                              <th className="py-2.5 px-3">Parameter Measured</th>
-                              <th className="py-2.5 px-3">Observed Value</th>
-                              <th className="py-2.5 px-3">Reference Interval</th>
-                              <th className="py-2.5 px-3">Unit</th>
+                              <th className="py-2.5 px-3">
+                                {selectedReport.isPrescription || selectedReport.testType === 'Prescription' ? 'Medication Name' : 'Parameter Measured'}
+                              </th>
+                              <th className="py-2.5 px-3">
+                                {selectedReport.isPrescription || selectedReport.testType === 'Prescription' ? 'Dosage & Regimen' : 'Observed Value'}
+                              </th>
+                              <th className="py-2.5 px-3">
+                                {selectedReport.isPrescription || selectedReport.testType === 'Prescription' ? 'Instructions / Timing' : 'Reference Interval'}
+                              </th>
+                              <th className="py-2.5 px-3">Unit / Format</th>
                               <th className="py-2.5 px-3">Clinical Evaluation</th>
                             </tr>
                           </thead>

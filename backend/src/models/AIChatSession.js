@@ -74,3 +74,4 @@ const aiChatSessionSchema = new mongoose.Schema(
 aiChatSessionSchema.index({ userId: 1, lastMessageAt: -1 });
 
 module.exports = mongoose.model('AIChatSession', aiChatSessionSchema);
+

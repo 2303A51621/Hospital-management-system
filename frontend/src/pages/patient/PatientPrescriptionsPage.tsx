@@ -6,6 +6,8 @@ import {
   Printer,
   ShieldCheck,
   Search,
+  FileText,
+  FileCheck,
 } from 'lucide-react';
 import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
@@ -132,6 +134,11 @@ export default function PatientPrescriptionsPage() {
                             {rx.diagnosis || 'Clinical Prescription'}
                           </h4>
                           <p className="text-xs text-teal-800 font-semibold mt-0.5">{docName}</p>
+                          {rx.fileUrl && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200 mt-1">
+                              <FileText size={10} /> Attached PDF
+                            </span>
+                          )}
                           <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
                             <span>{rx.medicines?.length || 0} Medication(s)</span>
                             <span className="text-teal-700 font-bold">View Sheet →</span>
@@ -203,6 +210,34 @@ export default function PatientPrescriptionsPage() {
                       </div>
                     </div>
 
+                    {/* Attached Prescription Document / PDF */}
+                    {selectedRx.fileUrl && (
+                      <div className="p-4 rounded-2xl bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-teal-600/30">
+                            <FileCheck size={20} />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold text-slate-900 truncate">
+                              {selectedRx.fileName || 'Attached Prescription Document (PDF)'}
+                            </div>
+                            <div className="text-[11px] text-teal-800 font-medium">
+                              Doctor attached clinical file • Official verified prescription
+                            </div>
+                          </div>
+                        </div>
+                        <a
+                          href={selectedRx.fileUrl}
+                          download={selectedRx.fileName || 'Prescription.pdf'}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold shadow-md shadow-teal-700/20 shrink-0 transition"
+                        >
+                          <Download size={14} /> Download Attached PDF
+                        </a>
+                      </div>
+                    )}
+
                     {/* Medicines Table */}
                     <div>
                       <div className="flex items-center gap-2 mb-3">
@@ -228,7 +263,7 @@ export default function PatientPrescriptionsPage() {
                             {(selectedRx.medicines || []).map((med: any, index: number) => (
                               <tr key={index} className="hover:bg-teal-50/30">
                                 <td className="py-3 px-3 font-mono text-slate-400">{index + 1}</td>
-                                <td className="py-3 px-3 font-bold text-slate-900">{med.name}</td>
+                                <td className="py-3 px-3 font-bold text-slate-900">{med.medicineName || med.name}</td>
                                 <td className="py-3 px-3 font-semibold text-teal-800">{med.dosage}</td>
                                 <td className="py-3 px-3 text-slate-700">{med.frequency}</td>
                                 <td className="py-3 px-3 text-slate-700">{med.duration}</td>
@@ -278,7 +313,20 @@ export default function PatientPrescriptionsPage() {
                         <Printer size={14} /> Print Prescription
                       </button>
                       <button
-                        onClick={() => window.print()}
+                        onClick={() => {
+                          if (selectedRx.fileUrl) {
+                            const link = document.createElement('a');
+                            link.href = selectedRx.fileUrl;
+                            link.download = selectedRx.fileName || 'Prescription.pdf';
+                            link.target = '_blank';
+                            link.rel = 'noopener noreferrer';
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                          } else {
+                            window.print();
+                          }
+                        }}
                         className="inline-flex items-center gap-1.5 px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold shadow-md shadow-teal-700/20"
                       >
                         <Download size={14} /> Download PDF

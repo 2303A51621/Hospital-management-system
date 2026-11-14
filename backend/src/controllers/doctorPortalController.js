@@ -526,19 +526,83 @@ exports.getDoctorPrescriptions = asyncHandler(async (req, res) => {
 
 exports.createDoctorPrescription = asyncHandler(async (req, res) => {
   const doctor = await getDoctorForUser(req.user._id);
-  const { patientId, medicines = [], diagnosis = '', notes = '', digitalSignature } = req.body;
+  const {
+    patientId,
+    medicines = [],
+    diagnosis = '',
+    notes = '',
+    instructions = '',
+    digitalSignature,
+    fileUrl = '',
+    fileName = '',
+    fileType = '',
+    fileSize = 0,
+    attachments = [],
+  } = req.body;
 
   if (!patientId) return res.status(400).json({ message: 'Patient is required' });
-  if (!medicines.length) return res.status(400).json({ message: 'At least one medicine is required' });
 
-  // 1. Fetch patient allergies
+  // 1. Fetch patient
   const patient = await Patient.findById(patientId);
+  if (!patient) return res.status(404).json({ message: 'Patient not found' });
   const allergies = patient?.allergies || [];
 
+  // Determine uploaded file data if present
+  let finalFileUrl = fileUrl || '';
+  let finalFileName = fileName || '';
+  let finalFileType = fileType || (finalFileUrl.includes('image/') ? 'image/png' : 'application/pdf');
+  let finalFileSize = Number(fileSize) || 0;
+
+  if (req.file) {
+    finalFileType = req.file.mimetype;
+    finalFileName = req.file.originalname;
+    finalFileSize = req.file.size;
+    finalFileUrl = `data:${finalFileType};base64,${req.file.buffer.toString('base64')}`;
+  }
+
+  // Normalize incoming medicines
+  const normalizedMedicines = (medicines || []).map((m) => {
+    const medName = (m.medicineName || m.name || '').trim();
+    return {
+      medicineId: m.medicineId || undefined,
+      medicineName: medName,
+      name: medName,
+      dosage: m.dosage || '1 tablet',
+      frequency: m.frequency || 'Once daily',
+      duration: m.duration || '5 days',
+      quantity: Number(m.quantity) || 10,
+      instructions: m.instructions || m.timing || 'After food',
+      timing: m.timing || 'after_food',
+      alternativeMedicine: m.alternativeMedicine || m.alternatives || '',
+      alternatives: m.alternatives || m.alternativeMedicine || '',
+    };
+  }).filter((m) => m.medicineName.length > 0);
+
+  // If no structured medicines but an uploaded file/PDF is provided, create a placeholder medicine
+  if (normalizedMedicines.length === 0) {
+    if (finalFileUrl || req.file) {
+      const docLabel = finalFileName ? `Prescription Document: ${finalFileName}` : 'Prescription Document';
+      normalizedMedicines.push({
+        medicineName: docLabel,
+        name: docLabel,
+        dosage: 'As directed',
+        frequency: 'As directed',
+        duration: 'As specified in attached file',
+        quantity: 1,
+        instructions: notes || instructions || 'Refer to uploaded prescription document',
+        timing: 'as_directed',
+        alternativeMedicine: '',
+        alternatives: '',
+      });
+    } else {
+      return res.status(400).json({ message: 'At least one medicine or prescription file is required' });
+    }
+  }
+
   // 2. Clinical safety verification
-  const allergyAlerts = checkAllergyConflicts(medicines, allergies);
-  const drugInteractions = checkDrugInteractions(medicines);
-  const duplicateWarnings = checkDuplicateMedicines(medicines);
+  const allergyAlerts = checkAllergyConflicts(normalizedMedicines, allergies);
+  const drugInteractions = checkDrugInteractions(normalizedMedicines);
+  const duplicateWarnings = checkDuplicateMedicines(normalizedMedicines);
 
   // If critical severe allergy conflict and not explicitly overridden
   if (allergyAlerts.some((a) => a.severity === 'severe') && !req.body.overrideAllergyWarning) {
@@ -550,17 +614,66 @@ exports.createDoctorPrescription = asyncHandler(async (req, res) => {
     });
   }
 
+  const finalAttachments = Array.isArray(attachments) && attachments.length > 0
+    ? attachments
+    : (finalFileUrl ? [{
+        fileUrl: finalFileUrl,
+        fileName: finalFileName || 'prescription.pdf',
+        fileType: finalFileType || 'application/pdf',
+        fileSize: finalFileSize,
+        uploadedAt: new Date(),
+      }] : []);
+
   const prescription = await Prescription.create({
-    patientId,
+    patientId: patient._id,
     doctorId: doctor._id,
-    diagnosis,
-    notes,
-    medicines,
+    diagnosis: diagnosis || 'General Clinical Consultation',
+    notes: notes || instructions || '',
+    medicines: normalizedMedicines,
+    fileUrl: finalFileUrl,
+    fileName: finalFileName,
+    fileType: finalFileType,
+    fileSize: finalFileSize,
+    attachments: finalAttachments,
     digitalSignature: digitalSignature || doctor.digitalSignature || `Dr. ${doctor.userId?.name || ''}`,
     allergiesChecked: true,
     drugInteractionsChecked: true,
     prescriptionDate: new Date(),
   });
+
+  // Automatically create a linked MedicalRecord entry so it appears in medical records and reports
+  try {
+    const MedicalRecord = require('../models/MedicalRecord');
+    await MedicalRecord.create({
+      patientId: patient._id,
+      doctorId: doctor._id,
+      recordType: 'prescription',
+      title: `Prescription: ${diagnosis || 'Doctor Consultation'} (${prescription.prescriptionId})`,
+      notes: notes || instructions || `Prescription issued by Dr. ${doctor.userId?.name || 'Doctor'} on ${new Date().toLocaleDateString()}`,
+      fileName: finalFileName || `${prescription.prescriptionId}.pdf`,
+      fileType: finalFileType || 'application/pdf',
+      fileData: finalFileUrl || 'digital_prescription_record',
+      uploadedAt: new Date(),
+    });
+  } catch (mrErr) {
+    console.error('Error creating linked MedicalRecord for prescription:', mrErr);
+  }
+
+  // Also sync to patient.documents if fileUrl is present
+  if (finalFileUrl && patient) {
+    try {
+      if (!patient.documents) patient.documents = [];
+      patient.documents.push({
+        documentType: 'Prescription',
+        fileUrl: finalFileUrl,
+        title: `Prescription: ${diagnosis || prescription.prescriptionId}`,
+        uploadDate: new Date(),
+      });
+      await patient.save();
+    } catch (docErr) {
+      console.error('Error appending to patient.documents:', docErr);
+    }
+  }
 
   // Notify patient
   if (patient?.userId) {
@@ -569,7 +682,7 @@ exports.createDoctorPrescription = asyncHandler(async (req, res) => {
       type: 'system',
       title: 'New Digital Prescription Issued',
       message: `Dr. ${doctor.userId?.name || 'Your specialist'} issued a prescription (${prescription.prescriptionId}) for ${diagnosis || 'your treatment'}.`,
-    });
+    }).catch(() => {});
   }
 
   res.status(201).json({

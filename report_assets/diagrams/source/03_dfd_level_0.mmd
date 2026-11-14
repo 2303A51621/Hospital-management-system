@@ -1,0 +1,23 @@
+graph TD
+    Patient["Patient"]
+    Doctor["Doctor"]
+    Staff["Hospital Admin & Staff"]
+    Razorpay["Payment Gateway (Razorpay)"]
+    LLM["Google Gemini 2.5 API"]
+
+    HMS(("0.0 Kushal Hospitals Management System"))
+
+    Patient -->|Appointment Requests, Medical Queries| HMS
+    HMS -->|Confirmations, Prescriptions, AI Advice, Bills| Patient
+
+    Doctor -->|Availability, Diagnosis, Rx, Notes| HMS
+    HMS -->|Patient EMR, Daily Schedule| Doctor
+
+    Staff -->|Ward Updates, Pharmacy Stock, Billing Data| HMS
+    HMS -->|Revenue Reports, Operational Alerts| Staff
+
+    HMS -->|Order Details| Razorpay
+    Razorpay -->|Payment Verification Webhook| HMS
+
+    HMS -->|Context & Knowledge Chunks| LLM
+    LLM -->|Grounded Responses| HMS

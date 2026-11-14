@@ -1,0 +1,16 @@
+sequenceDiagram
+    autonumber
+    actor Patient
+    participant Frontend as Patient Portal UI
+    participant Backend as Appointment Controller
+    participant DB as MongoDB Atlas
+
+    Patient->>Frontend: Select doctor, date, slot & symptoms
+    Frontend->>Backend: POST /api/appointments { doctorId, date, timeSlot }
+    Backend->>DB: Check doctor availability & slot collision
+    DB-->>Backend: Slot available
+    Backend->>DB: Appointment.create(status: "confirmed")
+    Backend->>DB: Billing.create(status: "pending", amount: fee)
+    DB-->>Backend: Saved records
+    Backend-->>Frontend: 201 Created { appointment, billing }
+    Frontend-->>Patient: Display Booking Confirmation Modal

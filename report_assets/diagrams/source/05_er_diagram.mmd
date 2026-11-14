@@ -1,0 +1,10 @@
+erDiagram
+    USER ||--o| PATIENT : "has"
+    USER ||--o| DOCTOR : "has"
+    PATIENT ||--o{ APPOINTMENT : "books"
+    DOCTOR ||--o{ APPOINTMENT : "attends"
+    APPOINTMENT ||--o| CONSULTATION : "results_in"
+    CONSULTATION ||--o| PRESCRIPTION : "generates"
+    APPOINTMENT ||--o| BILLING : "creates"
+    WARD ||--o{ BED : "contains"
+    PATIENT ||--o{ EMERGENCY_REQUEST : "requests"

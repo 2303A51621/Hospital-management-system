@@ -1,0 +1,24 @@
+graph TD
+    subgraph Presentation_Layer["Presentation Layer (Frontend)"]
+        UI["React 18 SPA (TypeScript + Vite 7)"]
+        Tailwind["Tailwind CSS 3.3 UI Components"]
+        Zustand["Zustand Store (Auth & Portal)"]
+        Axios["Axios HTTP Client"]
+    end
+
+    subgraph Backend_Layer["Application & API Gateway (Express 5)"]
+        API["Express 5.2 REST Endpoints"]
+        Auth["JWT Auth & Role-Based Access Control"]
+        Biz["Clinical & Operational Logic"]
+        AIEngine["Intelligent AI Assistant & RAG"]
+        Cron["Background Schedulers & Mailer"]
+    end
+
+    subgraph Data_Layer["Data & Persistence Layer"]
+        Atlas[("MongoDB Atlas Cloud Database")]
+        Models["19 Mongoose Schemas"]
+        Uploads[("Local/Multer File Storage")]
+    end
+
+    Presentation_Layer -->|HTTPS / JWT Bearer| Backend_Layer
+    Backend_Layer -->|Mongoose Connection| Data_Layer

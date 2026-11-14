@@ -1,0 +1,27 @@
+graph TD
+    Root["Kushal Hospitals System"]
+    M1["Patient Subsystem"]
+    M2["Doctor Subsystem"]
+    M3["Operational Subsystem"]
+    M4["AI Intelligence Subsystem"]
+
+    Root --> M1
+    Root --> M2
+    Root --> M3
+    Root --> M4
+
+    M1 --> M1_1["Appointments"]
+    M1 --> M1_2["EHR Records"]
+    M1 --> M1_3["Invoicing"]
+
+    M2 --> M2_1["Schedule"]
+    M2 --> M2_2["Consultations"]
+    M2 --> M2_3["Prescriptions"]
+
+    M3 --> M3_1["Wards & Beds"]
+    M3 --> M3_2["Pharmacy"]
+    M3 --> M3_3["Emergency Dispatch"]
+
+    M4 --> M4_1["RAG Medical Engine"]
+    M4 --> M4_2["Lab Report Analyzer"]
+    M4 --> M4_3["Emergency Guardrails"]

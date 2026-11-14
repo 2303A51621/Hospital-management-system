@@ -613,16 +613,79 @@ exports.getPatientMedicalReports = asyncHandler(async (req, res) => {
   const patient = await getPatientForUser(req.user._id, req.user);
   const { category, abnormalOnly } = req.query;
 
-  const filter = { patientId: patient._id };
-  if (category) filter.testCategory = category;
-  if (abnormalOnly === 'true') filter.isAbnormal = true;
+  const labFilter = { patientId: patient._id };
+  if (category && category !== 'all' && category !== 'prescription') labFilter.testCategory = category;
+  if (abnormalOnly === 'true') labFilter.isAbnormal = true;
 
-  const reports = await LabTest.find(filter)
-    .populate('doctorId', 'userId specialization')
-    .populate({ path: 'doctorId', populate: { path: 'userId', select: 'name' } })
-    .sort({ orderDate: -1 });
+  const [labReports, prescriptions] = await Promise.all([
+    category === 'prescription'
+      ? Promise.resolve([])
+      : LabTest.find(labFilter)
+          .populate('doctorId', 'userId specialization')
+          .populate({ path: 'doctorId', populate: { path: 'userId', select: 'name' } })
+          .sort({ orderDate: -1 }),
+    abnormalOnly === 'true'
+      ? Promise.resolve([])
+      : Prescription.find({ patientId: patient._id })
+          .populate('doctorId', 'userId specialization licenseNumber')
+          .populate({ path: 'doctorId', populate: { path: 'userId', select: 'name' } })
+          .sort({ prescriptionDate: -1, createdAt: -1 }),
+  ]);
 
-  res.json({ success: true, count: reports.length, data: reports });
+  const prescriptionReports = prescriptions.map((p) => {
+    const docName = p.doctorId?.userId?.name || 'Attending Physician';
+    const medsList = (p.medicines || []).map((m) => ({
+      name: m.medicineName || m.name || 'Medicine',
+      value: `${m.dosage || '1 tab'} • ${m.frequency || 'Daily'} (${m.duration || '5 days'})`,
+      normalRange: m.instructions || m.timing || 'As prescribed',
+      unit: 'Dosage',
+      isAbnormal: false,
+    }));
+
+    return {
+      _id: p._id,
+      prescriptionId: p.prescriptionId,
+      testName: `Prescription: ${p.diagnosis || 'Clinical Rx'} (${p.prescriptionId || 'Rx'})`,
+      testType: 'Prescription',
+      testCategory: 'Prescription',
+      status: p.status === 'active' ? 'completed' : (p.status || 'completed'),
+      date: p.prescriptionDate || p.createdAt,
+      createdAt: p.prescriptionDate || p.createdAt,
+      orderDate: p.prescriptionDate || p.createdAt,
+      doctorId: p.doctorId,
+      doctorName: docName,
+      fileUrl: p.fileUrl || '',
+      fileName: p.fileName || `${p.prescriptionId || 'Prescription'}.pdf`,
+      fileType: p.fileType || 'application/pdf',
+      fileSize: p.fileSize || 0,
+      attachments: p.attachments || [],
+      medicines: p.medicines || [],
+      parameters: medsList.length > 0 ? medsList : [
+        {
+          name: p.fileName ? `Prescription Document: ${p.fileName}` : 'Prescription File',
+          value: 'Attached PDF/Document',
+          normalRange: 'Clinician Verified',
+          unit: 'File',
+          isAbnormal: false,
+        },
+      ],
+      notes: p.notes || (p.fileUrl ? `Attached Prescription Document: ${p.fileName || 'Prescription PDF'}` : 'Doctor prescribed digital medication regimen.'),
+      isPrescription: true,
+    };
+  });
+
+  let combinedReports = [];
+  if (category === 'prescription') {
+    combinedReports = prescriptionReports;
+  } else if (category && category !== 'all') {
+    combinedReports = labReports;
+  } else {
+    combinedReports = [...labReports, ...prescriptionReports];
+  }
+
+  combinedReports.sort((a, b) => new Date(b.createdAt || b.orderDate || b.date) - new Date(a.createdAt || a.orderDate || a.date));
+
+  res.json({ success: true, count: combinedReports.length, data: combinedReports });
 });
 
 // 8. ONLINE PAYMENTS & INVOICES

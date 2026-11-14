@@ -1,0 +1,39 @@
+graph LR
+    Patient((Patient))
+    Doctor((Doctor))
+    Admin((Admin / Staff))
+    Nurse((Nurse))
+
+    subgraph HMS["Kushal Hospitals System"]
+        UC1([Register & Login])
+        UC2([Book & Manage Appointments])
+        UC3([View EHR & Lab Reports])
+        UC4([Consultation Notes & Rx])
+        UC5([AI Clinical Assistant])
+        UC6([Bed & Ward Management])
+        UC7([Pharmacy Inventory])
+        UC8([Billing & Online Payments])
+        UC9([Emergency Ambulance Dispatch])
+    end
+
+    Patient --> UC1
+    Patient --> UC2
+    Patient --> UC3
+    Patient --> UC5
+    Patient --> UC8
+
+    Doctor --> UC1
+    Doctor --> UC3
+    Doctor --> UC4
+    Doctor --> UC5
+
+    Admin --> UC1
+    Admin --> UC2
+    Admin --> UC6
+    Admin --> UC7
+    Admin --> UC8
+    Admin --> UC9
+
+    Nurse --> UC3
+    Nurse --> UC6
+    Nurse --> UC7

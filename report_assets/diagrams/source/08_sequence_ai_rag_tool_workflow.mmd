@@ -1,0 +1,22 @@
+sequenceDiagram
+    autonumber
+    actor User as Patient / Doctor
+    participant UI as Chat Widget UI
+    participant Controller as AI Chat Controller
+    participant Triage as Emergency Detector
+    participant RAG as Medical Knowledge RAG
+    participant LLM as Google Gemini API
+
+    User->>UI: Submits medical query or report text
+    UI->>Controller: POST /api/ai-chat/message { message, reportText }
+    Controller->>Triage: evaluateEmergency(message)
+    alt Emergency Red-Flag Triggered
+        Triage-->>Controller: Critical emergency alert
+        Controller-->>UI: Immediate 911/108 guidance + hospital helpline
+    else Normal Clinical Query
+        Controller->>RAG: searchMedicalKnowledge(message)
+        RAG-->>Controller: Relevant clinical chunks & verified guidelines
+        Controller->>LLM: Prompt with RAG context & hospital facts
+        LLM-->>Controller: Structured answer with disclaimers
+        Controller-->>UI: Render markdown response + citations
+    end

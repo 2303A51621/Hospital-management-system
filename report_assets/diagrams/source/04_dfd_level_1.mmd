@@ -1,0 +1,28 @@
+graph TD
+    P1(("1.0 Auth & RBAC"))
+    P2(("2.0 Appointments"))
+    P3(("3.0 Consultations"))
+    P4(("4.0 Ward & Bed"))
+    P5(("5.0 AI Assistant"))
+    P6(("6.0 Billing & Pay"))
+    P7(("7.0 Pharmacy"))
+
+    D1[("D1 Users & Profiles")]
+    D2[("D2 Appointments & Slots")]
+    D3[("D3 EMR & Prescriptions")]
+    D4[("D4 Wards & Bed Status")]
+    D5[("D5 Medical Knowledge")]
+    D6[("D6 Billing Invoices")]
+    D7[("D7 Medicine Inventory")]
+
+    P1 <--> D1
+    P2 <--> D2
+    P3 <--> D3
+    P4 <--> D4
+    P5 <--> D5
+    P6 <--> D6
+    P7 <--> D7
+
+    P2 -.->|Confirmed Appointment| P6
+    P3 -.->|Prescription Medicines| P7
+    P2 -.->|Schedule Data| P5
