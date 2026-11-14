@@ -40,7 +40,7 @@ export default function RegisterPage() {
     phone: '',
     password: '',
     confirmPassword: '',
-    role: 'patient' as 'admin' | 'doctor' | 'patient',
+    role: 'patient' as 'admin' | 'doctor' | 'nurse' | 'patient',
   });
   const [loading, setLoading] = useState(false);
 
@@ -218,6 +218,7 @@ export default function RegisterPage() {
               >
                 <option value="patient">Patient</option>
                 <option value="doctor">Doctor</option>
+                <option value="nurse">Nurse</option>
                 <option value="admin">Admin</option>
               </select>
             </div>

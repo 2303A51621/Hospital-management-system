@@ -73,7 +73,14 @@ The platform implements rigid Role-Based Access Control (RBAC) enforced at both 
 | Capture Consultation Notes & Record Vitals | ❌ | ❌ | ✅ | ❌ | ✅ |
 | Generate & Digitally Sign Prescriptions | ❌ | ❌ | ✅ | ❌ | ✅ |
 | Set Doctor 24/7 Availability Schedule | ❌ | ❌ | ✅ | ❌ | ✅ |
-| Ward Bed Monitoring Matrix (`/wards`) | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Nurse Portal & Dashboard (`/nurse/dashboard`) | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Inpatient Vitals Monitor & Clinical Alerts (`/nurse/vitals`) | ❌ | ❌ | ✅ | ✅ | ✅ |
+| eMAR Medication Administration & 5-Rights (`/nurse/medications`) | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Nursing Tasks & Care Rounds (`/nurse/tasks`, `/nurse/schedule`) | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Signed Clinical Progress Notes (`/nurse/notes`) | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Shift Management, SBAR Handover & Attendance (`/nurse/shifts`) | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Stat Rapid Response & Code Blue Console (`/nurse/emergency`) | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Ward Bed Monitoring Matrix (`/wards`, `/nurse/wards`) | ❌ | ❌ | ❌ | ✅ | ✅ |
 | Update Bed Occupancy & Sanitization Status | ❌ | ❌ | ❌ | ✅ | ✅ |
 | Pharmacy Inventory Management (`/pharmacy`) | ❌ | ❌ | ❌ | ❌ | ✅ |
 | Billing Ledger & Accounts Management (`/billing`) | ❌ | ❌ | ❌ | ❌ | ✅ |

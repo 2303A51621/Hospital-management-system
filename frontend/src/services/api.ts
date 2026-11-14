@@ -49,7 +49,7 @@ const toSearchParams = (params: Record<string, string | number | undefined>) => 
   return search.toString();
 };
 
-export type UserRole = 'admin' | 'doctor' | 'patient' | (string & {});
+export type UserRole = 'admin' | 'doctor' | 'nurse' | 'patient' | (string & {});
 
 export interface AuthUser {
   id: string;
@@ -67,7 +67,7 @@ export interface RegisterPayload {
   name: string;
   email: string;
   password: string;
-  role: 'admin' | 'doctor' | 'patient';
+  role: 'admin' | 'doctor' | 'nurse' | 'patient';
   phone?: string;
 }
 

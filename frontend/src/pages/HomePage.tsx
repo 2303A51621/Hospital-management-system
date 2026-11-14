@@ -11,7 +11,7 @@ export default function HomePage() {
   const highlights = [
     {
       title: 'Realtime Care Operations',
-      description: 'Unified dashboards for doctors, patients, and administrators with role-based workflows.',
+      description: 'Unified dashboards for doctors, nurses, patients, and administrators with role-based workflows.',
       icon: Activity,
     },
     {

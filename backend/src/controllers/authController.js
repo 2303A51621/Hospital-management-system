@@ -18,7 +18,7 @@ exports.register = asyncHandler(async (req, res) => {
   if (!normalizedEmail) {
     return res.status(400).json({ message: 'Email is required' });
   }
-  if (!['patient', 'doctor', 'admin'].includes(normalizedRole)) {
+  if (!['patient', 'doctor', 'admin', 'nurse'].includes(normalizedRole)) {
     return res.status(403).json({ message: 'This account role can only be assigned by an administrator' });
   }
   const user = await User.create({
@@ -54,6 +54,20 @@ exports.register = asyncHandler(async (req, res) => {
         department: details.department || 'General Medicine',
         qualification: details.qualification || [],
         bio: details.bio || 'New doctor profile created automatically.',
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
+  }
+
+  if (normalizedRole === 'nurse') {
+    const Nurse = require('../models/Nurse');
+    await Nurse.findOneAndUpdate(
+      { userId: user._id },
+      {
+        userId: user._id,
+        licenseNumber: details.licenseNumber || `RN-${Math.floor(100000 + Math.random() * 900000)}`,
+        department: details.department || 'Inpatient Nursing Care',
+        assignedWardName: details.assignedWardName || 'General Ward A',
       },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
@@ -109,6 +123,15 @@ exports.createStaff = asyncHandler(async (req, res) => {
       consultationFee: Number(details.consultationFee) || 0,
       department: details.department || 'General Medicine',
       qualification: details.qualification || [],
+    });
+  }
+  if (role === 'nurse') {
+    const Nurse = require('../models/Nurse');
+    await Nurse.create({
+      userId: user._id,
+      licenseNumber: details.licenseNumber || `RN-${Math.floor(100000 + Math.random() * 900000)}`,
+      department: details.department || 'Inpatient Nursing Care',
+      assignedWardName: details.assignedWardName || 'General Ward A',
     });
   }
   res.status(201).json({ success: true, data: user.toObject() });
