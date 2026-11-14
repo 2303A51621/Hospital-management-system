@@ -88,3 +88,4 @@ medicationAdministrationSchema.index({ status: 1 });
 medicationAdministrationSchema.index({ nurseId: 1, administeredAt: -1 });
 
 module.exports = mongoose.model('MedicationAdministration', medicationAdministrationSchema);
+

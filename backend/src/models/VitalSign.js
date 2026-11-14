@@ -131,3 +131,4 @@ vitalSignSchema.index({ patientId: 1, recordedAt: -1 });
 vitalSignSchema.index({ nurseId: 1, recordedAt: -1 });
 
 module.exports = mongoose.model('VitalSign', vitalSignSchema);
+

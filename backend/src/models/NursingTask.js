@@ -79,3 +79,4 @@ nursingTaskSchema.index({ patientId: 1, status: 1 });
 nursingTaskSchema.index({ dueDate: 1 });
 
 module.exports = mongoose.model('NursingTask', nursingTaskSchema);
+

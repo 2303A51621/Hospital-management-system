@@ -102,3 +102,4 @@ router.put('/profile', logActivity('nurse', 'update'), updateNurseProfile);
 router.get('/reports', logActivity('nurse', 'view'), getNurseReports);
 
 module.exports = router;
+

@@ -96,3 +96,4 @@ nursingNoteSchema.index({ patientId: 1, createdAt: -1 });
 nursingNoteSchema.index({ nurseId: 1, createdAt: -1 });
 
 module.exports = mongoose.model('NursingNote', nursingNoteSchema);
+

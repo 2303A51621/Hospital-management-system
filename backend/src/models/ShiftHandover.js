@@ -111,3 +111,4 @@ shiftHandoverSchema.index({ outgoingNurseId: 1, shiftDate: -1 });
 shiftHandoverSchema.index({ incomingNurseId: 1, shiftDate: -1 });
 
 module.exports = mongoose.model('ShiftHandover', shiftHandoverSchema);
+

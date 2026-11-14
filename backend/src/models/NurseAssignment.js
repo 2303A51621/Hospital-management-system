@@ -64,3 +64,4 @@ nurseAssignmentSchema.index({ nurseId: 1, status: 1 });
 nurseAssignmentSchema.index({ patientId: 1, status: 1 });
 
 module.exports = mongoose.model('NurseAssignment', nurseAssignmentSchema);
+
