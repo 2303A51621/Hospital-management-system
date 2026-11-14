@@ -6,6 +6,7 @@ import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import { appointmentAPI, doctorAPI, notificationAPI, patientAPI, type Doctor, type NotificationItem } from '../services/api';
 import { useAuthStore } from '../store/authStore';
+import { getDoctorPhoto, FALLBACK_DOCTOR_PHOTO } from '../utils/doctorPhoto';
 
 interface Slot {
   startTime: string;
@@ -1035,23 +1036,36 @@ export default function AppointmentsPage() {
               <div className="space-y-4">
                 {appointments.map((appointment) => (
                   <div key={appointment._id} className="rounded-2xl border border-slate-200 bg-gradient-to-r from-white to-cyan-50/40 p-4 shadow-sm transition hover:shadow-md flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-slate-800">
-                        {appointment.doctorId?.userId?.name || `${appointment.doctorId?.userId?.firstName || ''} ${appointment.doctorId?.userId?.lastName || ''}`.trim()}
-                      </p>
-                      <p className="text-sm text-slate-600 inline-flex items-center gap-1">
-                        <Clock3 size={14} className="text-cyan-700" />
-                        {(appointment.appointmentDate || appointment.date || '').toString().slice(0, 10)} {appointment.startTime} - {appointment.endTime}
-                      </p>
-                      <p className="text-sm text-slate-500">{appointment.reason}</p>
-                      <p className="mt-1 inline-flex items-center gap-1 text-xs text-indigo-700 capitalize">
-                        {appointment.consultationType === 'telemedicine' ? <Video size={12} /> : <Stethoscope size={12} />}
-                        {appointment.consultationType || 'in-person'}
-                      </p>
+                    <div className="flex items-start gap-3.5">
+                      <div className="relative h-12 w-12 rounded-2xl overflow-hidden shrink-0 border border-teal-100 bg-teal-50 shadow-xs">
+                        <img
+                          src={getDoctorPhoto(appointment.doctorId)}
+                          alt="Doctor"
+                          className="h-full w-full object-cover"
+                          onError={(e: any) => {
+                            e.target.onerror = null;
+                            e.target.src = FALLBACK_DOCTOR_PHOTO;
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-slate-800">
+                          {appointment.doctorId?.userId?.name || `${appointment.doctorId?.userId?.firstName || ''} ${appointment.doctorId?.userId?.lastName || ''}`.trim() || 'Attending Physician'}
+                        </p>
+                        <p className="text-sm text-slate-600 inline-flex items-center gap-1">
+                          <Clock3 size={14} className="text-cyan-700" />
+                          {(appointment.appointmentDate || appointment.date || '').toString().slice(0, 10)} {appointment.startTime} - {appointment.endTime}
+                        </p>
+                        <p className="text-sm text-slate-500">{appointment.reason}</p>
+                        <p className="mt-1 inline-flex items-center gap-1 text-xs text-indigo-700 capitalize">
+                          {appointment.consultationType === 'telemedicine' ? <Video size={12} /> : <Stethoscope size={12} />}
+                          {appointment.consultationType || 'in-person'}
+                        </p>
 
-                      {appointment.rating ? (
-                        <p className="mt-1 inline-flex items-center gap-1 text-xs text-amber-700"><Star size={12} className="fill-amber-400 text-amber-500" /> Your rating: {appointment.rating}/5</p>
-                      ) : null}
+                        {appointment.rating ? (
+                          <p className="mt-1 inline-flex items-center gap-1 text-xs text-amber-700"><Star size={12} className="fill-amber-400 text-amber-500" /> Your rating: {appointment.rating}/5</p>
+                        ) : null}
+                      </div>
                     </div>
                     <div className="flex flex-col items-start md:items-end gap-2">
                       <span className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${getStatusBadgeClass(appointment.status)}`}>

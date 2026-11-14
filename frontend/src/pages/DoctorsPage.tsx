@@ -15,6 +15,7 @@ import Sidebar from '../components/Sidebar';
 import { doctorAPI, type Doctor, type DoctorReview } from '../services/api';
 import { useAuthStore } from '../store/authStore';
 import { formatDoctorShift } from '../utils/doctorAvailability';
+import { getDoctorPhoto, FALLBACK_DOCTOR_PHOTO } from '../utils/doctorPhoto';
 
 const SPECIALIZATION_OPTIONS = [
   'Cardiology',
@@ -308,8 +309,16 @@ export default function DoctorsPage() {
                         {/* Doctor Profile Header */}
                         <div className="flex gap-4 items-start">
                           <div className="relative shrink-0">
-                            <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-teal-600 to-cyan-500 text-white font-extrabold flex items-center justify-center text-2xl shadow-md shadow-teal-600/20">
-                              {doctorName[0] || 'D'}
+                            <div className="w-20 h-20 rounded-2xl bg-teal-50 border border-teal-100/80 overflow-hidden shadow-sm shadow-teal-900/5">
+                              <img
+                                src={getDoctorPhoto(doctor)}
+                                alt={`Dr. ${doctorName}`}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                onError={(e: any) => {
+                                  e.target.onerror = null;
+                                  e.target.src = FALLBACK_DOCTOR_PHOTO;
+                                }}
+                              />
                             </div>
                             <span className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-emerald-500 ring-2 ring-white" />
                           </div>

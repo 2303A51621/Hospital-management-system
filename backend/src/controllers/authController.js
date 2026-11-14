@@ -92,7 +92,7 @@ exports.createAdmin = asyncHandler(async (req, res) => {
 exports.getStaff = asyncHandler(async (req, res) => {
   const allowedRoles = ['doctor', 'nurse', 'lab_technician', 'receptionist', 'pharmacist'];
   const users = await User.find({ role: { $in: allowedRoles } })
-    .select('name firstName lastName email phone role status lastLogin createdAt')
+    .select('name firstName lastName email phone role status lastLogin createdAt profilePicture')
     .sort({ role: 1, name: 1 });
   const Doctor = require('../models/Doctor');
   const doctors = await Doctor.find({ userId: { $in: users.map((user) => user._id) } })

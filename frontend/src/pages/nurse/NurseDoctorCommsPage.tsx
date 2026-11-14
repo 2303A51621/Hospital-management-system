@@ -10,6 +10,7 @@ import Navbar from '../../components/Navbar';
 import Sidebar from '../../components/Sidebar';
 import { nursePortalAPI } from '../../services/api';
 import toast from 'react-hot-toast';
+import { getDoctorPhoto, FALLBACK_DOCTOR_PHOTO } from '../../utils/doctorPhoto';
 
 export default function NurseDoctorCommsPage() {
   const [doctors, setDoctors] = useState<any[]>([]);
@@ -249,8 +250,16 @@ export default function NurseDoctorCommsPage() {
                           className="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50"
                         >
                           <div className="flex items-center gap-2.5">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-100 text-teal-800 text-xs font-bold">
-                              Dr
+                            <div className="relative h-9 w-9 rounded-xl overflow-hidden shrink-0 border border-teal-100 bg-teal-50">
+                              <img
+                                src={getDoctorPhoto(doc)}
+                                alt={name}
+                                className="h-full w-full object-cover"
+                                onError={(e: any) => {
+                                  e.target.onerror = null;
+                                  e.target.src = FALLBACK_DOCTOR_PHOTO;
+                                }}
+                              />
                             </div>
                             <div>
                               <div className="text-xs font-bold text-slate-900">{name}</div>

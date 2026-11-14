@@ -275,6 +275,7 @@ export interface StaffMember {
   phone?: string;
   role: string;
   status: string;
+  profilePicture?: string;
   doctorProfile?: {
     specialization?: string;
     department?: string;

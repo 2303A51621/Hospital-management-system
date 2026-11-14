@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowUpRight, BarChart3, CalendarDays, ChevronDown, CircleDollarSign, FileText, MoreVertical, ShieldCheck, Stethoscope, Users, type LucideIcon } from 'lucide-react';
+import { ArrowUpRight, BarChart3, CalendarDays, ChevronDown, CircleDollarSign, FileText, MoreVertical, ShieldCheck, Users, type LucideIcon } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import { appointmentAPI, doctorAPI, patientAPI, type Appointment, type Doctor } from '../services/api';
 import { toDateString } from '../utils/dateUtils';
+import { getDoctorPhoto, FALLBACK_DOCTOR_PHOTO } from '../utils/doctorPhoto';
 
 const money = (value: number) => `₹${value.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 const doctorName = (doctor?: Doctor) => doctor?.userId?.name || `${doctor?.userId?.firstName || ''} ${doctor?.userId?.lastName || ''}`.trim() || 'Specialist';
@@ -106,8 +107,18 @@ export default function AdminDashboardPage() {
                   <aside className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
                     <div className="mb-4 flex items-center justify-between"><h2 className="text-lg font-bold">Our Specialists</h2><button className="rounded-full bg-slate-900 p-2 text-white"><ArrowUpRight size={15} /></button></div>
                     {doctors.map((doctor) => (
-                      <div key={doctor._id} className="mb-3 flex items-center gap-3 rounded-xl border border-slate-100 p-3">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-cyan-100 text-cyan-700"><Stethoscope size={20} /></div>
+                      <div key={doctor._id} className="mb-3 flex items-center gap-3 rounded-xl border border-slate-100 p-3 hover:border-slate-200 transition">
+                        <div className="relative h-11 w-11 rounded-full overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
+                          <img
+                            src={getDoctorPhoto(doctor)}
+                            alt={doctorName(doctor)}
+                            className="h-full w-full object-cover"
+                            onError={(e: any) => {
+                              e.target.onerror = null;
+                              e.target.src = FALLBACK_DOCTOR_PHOTO;
+                            }}
+                          />
+                        </div>
                         <div className="min-w-0 flex-1"><p className="truncate text-sm font-bold">{doctorName(doctor)}</p><p className="truncate text-xs text-slate-400">{doctor.specialization}</p></div>
                         <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-600">Available</span>
                       </div>
