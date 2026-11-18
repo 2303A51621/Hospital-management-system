@@ -134,7 +134,7 @@ exports.bookAppointment = asyncHandler(async (req, res) => {
 			userId: body.userId || req.user._id,
 			appointmentDate,
 			date: appointmentDate,
-			consultationFee: Number(doctor.consultationFee || 0),
+			consultationFee: Number(doctor.consultationFee || 600),
 			status: isCash ? 'confirmed' : 'pending',
 		});
 	} catch (error) {
@@ -149,7 +149,7 @@ exports.bookAppointment = asyncHandler(async (req, res) => {
 			itemType: 'consultation',
 			description: `${doctor.specialization} consultation`,
 			quantity: 1,
-			unitPrice: doctor.consultationFee,
+			unitPrice: doctor.consultationFee || 600,
 		}],
 		paymentDetails: {
 			paymentMethod,

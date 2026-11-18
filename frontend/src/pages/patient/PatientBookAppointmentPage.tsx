@@ -146,7 +146,7 @@ export default function PatientBookAppointmentPage() {
         timeSlot: activeSlot,
         type: consultationType,
         consultationType,
-        consultationFee: selectedDoctor?.consultationFee || 500,
+        consultationFee: selectedDoctor?.consultationFee || 600,
         reason: activeReason,
         symptoms: symptomsList,
         medicalHistoryNotes: medicalNotes.trim(),
@@ -328,7 +328,7 @@ export default function PatientBookAppointmentPage() {
                             const name = u.name || `Dr. ${u.firstName || ''} ${u.lastName || ''}`.trim() || 'Clinician';
                             return (
                               <option key={doc._id} value={doc._id}>
-                                {name} — {doc.specialization} ({doc.department || 'Medicine'}) • ₹{doc.consultationFee}
+                                {name} — {doc.specialization} ({doc.department || 'Medicine'}) • ₹{doc.consultationFee || 600}
                               </option>
                             );
                           })}
@@ -710,7 +710,7 @@ export default function PatientBookAppointmentPage() {
                   </div>
                   <div className="flex justify-between items-center py-1">
                     <span className="text-slate-500 font-semibold uppercase text-[11px]">Consultation Fee</span>
-                    <span className="font-black text-slate-900 text-sm">₹{selectedDoctor?.consultationFee || 500}</span>
+                    <span className="font-black text-slate-900 text-sm">₹{selectedDoctor?.consultationFee || 600}</span>
                   </div>
                 </div>
 

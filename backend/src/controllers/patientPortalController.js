@@ -296,7 +296,7 @@ exports.getDoctorAvailableSlots = asyncHandler(async (req, res) => {
     success: true,
     dayName,
     date,
-    doctorFee: doctor.consultationFee || 500,
+    doctorFee: doctor.consultationFee || 600,
     shiftHours: '24 Hours',
     shiftTiming: '24 Hours Round-the-Clock',
     availableDays: doctor.availableDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
@@ -313,7 +313,7 @@ exports.getDoctorAvailableSlots = asyncHandler(async (req, res) => {
       doctor: {
         _id: doctor._id,
         specialization: doctor.specialization,
-        consultationFee: doctor.consultationFee || 500,
+        consultationFee: doctor.consultationFee || 600,
         availableSlots: doctor.availableSlots,
         availableDays: doctor.availableDays,
       },
@@ -385,7 +385,7 @@ exports.bookAppointment = asyncHandler(async (req, res) => {
   const endTime = req.body.endTime || `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
 
   const symptomsList = Array.isArray(symptoms) ? symptoms : [symptoms].filter(Boolean);
-  const consultationFee = Number(doctor.consultationFee || req.body.consultationFee || 500);
+  const consultationFee = Number(doctor.consultationFee || req.body.consultationFee || 600);
 
   let cType = String(consultationType || req.body.type || 'in-person').toLowerCase();
   if (cType === 'video') cType = 'telemedicine';
@@ -477,7 +477,7 @@ exports.bookAppointment = asyncHandler(async (req, res) => {
       startTime: normalizedStart,
       timeSlot: rawTime,
       endTime,
-      consultationFee: doctor.consultationFee || 500,
+      consultationFee: doctor.consultationFee || 600,
       status: appointment.status,
     },
   });
@@ -920,7 +920,7 @@ exports.getPatientFollowUps = asyncHandler(async (req, res) => {
     doctorId: c.doctorId?._id,
     doctorName: c.doctorId?.userId?.name || 'Consulting Physician',
     specialization: c.doctorId?.specialization || 'Specialist',
-    consultationFee: c.doctorId?.consultationFee || 500,
+    consultationFee: c.doctorId?.consultationFee || 600,
     diagnosis: c.finalDiagnosis || c.preliminaryDiagnosis || 'Clinical Visit',
     followUpDate: c.followUp?.date,
     instructions: c.followUp?.instructions || 'Standard recovery evaluation',
