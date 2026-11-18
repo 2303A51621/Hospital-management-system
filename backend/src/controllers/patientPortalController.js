@@ -44,6 +44,7 @@ const toDateString = (dateVal) => {
 // 1. PATIENT DASHBOARD
 exports.getPatientDashboard = asyncHandler(async (req, res) => {
   const patient = await getPatientForUser(req.user._id, req.user);
+  const patientQuery = { $in: [patient._id, req.user._id] };
 
   const [
     allAppointments,
@@ -53,57 +54,101 @@ exports.getPatientDashboard = asyncHandler(async (req, res) => {
     billings,
     notifications,
   ] = await Promise.all([
-    Appointment.find({ patientId: patient._id })
+    Appointment.find({ patientId: patientQuery })
       .populate('doctorId', 'userId specialization consultationFee department rating')
       .populate({ path: 'doctorId', populate: { path: 'userId', select: 'name firstName lastName email phone profilePicture' } })
-      .sort({ appointmentDate: -1 }),
-    Consultation.find({ patientId: patient._id, status: 'completed' })
+      .sort({ appointmentDate: -1, date: -1, createdAt: -1 }),
+    Consultation.find({ patientId: patientQuery, status: 'completed' })
       .populate('doctorId')
       .populate({ path: 'doctorId', populate: { path: 'userId', select: 'name firstName lastName' } })
       .sort({ visitDate: -1 })
-      .limit(5),
-    Prescription.find({ patientId: patient._id })
+      .limit(10),
+    Prescription.find({ patientId: patientQuery })
       .populate('doctorId')
-      .populate({ path: 'doctorId', populate: { path: 'userId', select: 'name' } })
-      .sort({ createdAt: -1 })
-      .limit(5),
-    LabTest.find({ patientId: patient._id })
+      .populate({ path: 'doctorId', populate: { path: 'userId', select: 'name firstName lastName' } })
+      .sort({ prescriptionDate: -1, createdAt: -1 }),
+    LabTest.find({ patientId: patientQuery })
       .populate('doctorId')
-      .sort({ orderDate: -1 })
-      .limit(5),
-    Billing.find({ patientId: patient._id })
-      .sort({ invoiceDate: -1 }),
+      .sort({ orderDate: -1 }),
+    Billing.find({ patientId: patientQuery })
+      .sort({ invoiceDate: -1, createdAt: -1 }),
     Notification.find({ userId: req.user._id })
       .sort({ createdAt: -1 })
-      .limit(6),
+      .limit(10),
   ]);
+
+  // Active appointments (pending, scheduled, confirmed)
+  const activeAppointments = allAppointments.filter((a) => {
+    const status = (a.status || '').toLowerCase();
+    return ['pending', 'scheduled', 'confirmed'].includes(status);
+  });
 
   const now = new Date();
   const todayStr = now.toISOString().slice(0, 10);
 
   const upcomingAppointments = allAppointments.filter((a) => {
     const dStr = toDateString(a.appointmentDate || a.date);
-    return ['pending', 'scheduled', 'confirmed'].includes(a.status) && dStr >= todayStr;
+    const status = (a.status || '').toLowerCase();
+    return ['pending', 'scheduled', 'confirmed'].includes(status) && dStr >= todayStr;
   });
 
-  const completedAppointments = allAppointments.filter((a) => a.status === 'completed');
-  const cancelledAppointments = allAppointments.filter((a) => a.status === 'cancelled');
-  const pendingAppointments = allAppointments.filter((a) => a.status === 'pending');
+  const completedAppointments = allAppointments.filter((a) => (a.status || '').toLowerCase() === 'completed');
+  const cancelledAppointments = allAppointments.filter((a) => (a.status || '').toLowerCase() === 'cancelled');
+  const pendingAppointments = allAppointments.filter((a) => (a.status || '').toLowerCase() === 'pending');
 
-  const pendingReports = labTests.filter((t) => t.status !== 'completed');
+  const pendingReports = labTests.filter((t) => (t.status || '').toLowerCase() !== 'completed');
   const unreadNotificationsCount = await Notification.countDocuments({ userId: req.user._id, isRead: false });
 
-  // Outstanding payments
-  const unpaidInvoices = billings.filter((b) => b.paymentDetails?.paymentStatus === 'pending' || b.status === 'issued');
-  const totalOutstandingPayment = unpaidInvoices.reduce((sum, b) => sum + (b.summary?.totalAmount || 0), 0);
+  // Outstanding payments calculation
+  const unpaidInvoices = billings.filter((b) => {
+    const pStatus = (b.paymentDetails?.paymentStatus || '').toLowerCase();
+    const bStatus = (b.status || '').toLowerCase();
+    return pStatus === 'pending' || pStatus === 'partial' || pStatus === 'failed' || bStatus === 'issued' || bStatus === 'draft';
+  });
+  let totalOutstandingPayment = unpaidInvoices.reduce((sum, b) => sum + (b.summary?.totalAmount || 0), 0);
+
+  // Check if any active appointments with pay_at_hospital / pending payment are not yet billed
+  const billedAppointmentIds = new Set(billings.map((b) => String(b.appointmentId)).filter(Boolean));
+  allAppointments.forEach((apt) => {
+    const aptStatus = (apt.status || '').toLowerCase();
+    if (['pending', 'confirmed', 'scheduled'].includes(aptStatus)) {
+      if ((apt.paymentStatus === 'pending' || !apt.paymentStatus) && !billedAppointmentIds.has(String(apt._id))) {
+        const fee = Number(apt.consultationFee || apt.doctorId?.consultationFee) || 0;
+        if (fee > 0) {
+          totalOutstandingPayment += fee;
+        }
+      }
+    }
+  });
 
   // Doctor follow-up recommendations
   const allFollowUps = await Consultation.find({
-    patientId: patient._id,
+    patientId: patientQuery,
     'followUp.isRequired': true,
   })
     .populate({ path: 'doctorId', populate: { path: 'userId', select: 'name' } })
     .sort({ 'followUp.date': 1 });
+
+  const statsPayload = {
+    totalAppointments: allAppointments.length,
+    activeAppointments: activeAppointments.length,
+    activeAppointmentsCount: activeAppointments.length,
+    upcomingAppointments: activeAppointments.length,
+    upcomingAppointmentsCount: activeAppointments.length,
+    completedAppointments: completedAppointments.length,
+    completedAppointmentsCount: completedAppointments.length,
+    cancelledAppointments: cancelledAppointments.length,
+    cancelledAppointmentsCount: cancelledAppointments.length,
+    pendingAppointments: pendingAppointments.length,
+    pendingAppointmentsCount: pendingAppointments.length,
+    prescriptionsCount: prescriptions.length,
+    totalPrescriptionsCount: prescriptions.length,
+    pendingLabReports: pendingReports.length,
+    pendingReportsCount: pendingReports.length,
+    unreadNotificationsCount,
+    outstandingPayment: totalOutstandingPayment,
+    totalOutstandingPayment,
+  };
 
   res.json({
     success: true,
@@ -120,23 +165,19 @@ exports.getPatientDashboard = asyncHandler(async (req, res) => {
         allergiesCount: patient.allergies?.length || 0,
         chronicConditionsCount: patient.chronicDiseases?.length || 0,
       },
-      metrics: {
-        totalAppointments: allAppointments.length,
-        upcomingAppointmentsCount: upcomingAppointments.length,
-        completedAppointmentsCount: completedAppointments.length,
-        cancelledAppointmentsCount: cancelledAppointments.length,
-        pendingAppointmentsCount: pendingAppointments.length,
-        totalPrescriptionsCount: prescriptions.length,
-        pendingReportsCount: pendingReports.length,
-        unreadNotificationsCount,
-        totalOutstandingPayment,
-      },
-      upcomingAppointments: upcomingAppointments.slice(0, 3),
+      stats: statsPayload,
+      metrics: statsPayload,
+      activeAppointments: activeAppointments.slice(0, 5),
+      upcomingAppointments: activeAppointments.slice(0, 5),
       recentConsultations: consultations,
-      recentPrescriptions: prescriptions,
+      recentPrescriptions: prescriptions.slice(0, 10),
+      prescriptions: prescriptions.slice(0, 10),
       pendingReports,
+      labReports: labTests,
       recentNotifications: notifications,
-      followUpReminders: allFollowUps.slice(0, 3),
+      notifications,
+      followUpReminders: allFollowUps.slice(0, 5),
+      followUps: allFollowUps.slice(0, 5),
     },
   });
 });
@@ -447,7 +488,7 @@ exports.getPatientAppointments = asyncHandler(async (req, res) => {
   const patient = await getPatientForUser(req.user._id, req.user);
   const { status, tab } = req.query;
 
-  const filter = { patientId: patient._id };
+  const filter = { patientId: { $in: [patient._id, req.user._id] } };
   if (status && status !== 'all') filter.status = status;
 
   let appointments = await Appointment.find(filter)
@@ -599,11 +640,12 @@ exports.uploadPatientDocument = asyncHandler(async (req, res) => {
 // 6. PRESCRIPTIONS (Strictly read-only for patient)
 exports.getPatientPrescriptions = asyncHandler(async (req, res) => {
   const patient = await getPatientForUser(req.user._id, req.user);
+  const patientQuery = { $in: [patient._id, req.user._id] };
 
-  const prescriptions = await Prescription.find({ patientId: patient._id })
+  const prescriptions = await Prescription.find({ patientId: patientQuery })
     .populate('doctorId', 'userId specialization qualification digitalSignature department')
     .populate({ path: 'doctorId', populate: { path: 'userId', select: 'name firstName lastName email' } })
-    .sort({ createdAt: -1 });
+    .sort({ prescriptionDate: -1, createdAt: -1 });
 
   res.json({ success: true, count: prescriptions.length, data: prescriptions });
 });
@@ -691,17 +733,22 @@ exports.getPatientMedicalReports = asyncHandler(async (req, res) => {
 // 8. ONLINE PAYMENTS & INVOICES
 exports.getPatientBilling = asyncHandler(async (req, res) => {
   const patient = await getPatientForUser(req.user._id, req.user);
+  const patientQuery = { $in: [patient._id, req.user._id] };
 
-  const billings = await Billing.find({ patientId: patient._id })
+  const billings = await Billing.find({ patientId: patientQuery })
     .populate('appointmentId')
-    .sort({ invoiceDate: -1 });
+    .sort({ invoiceDate: -1, createdAt: -1 });
 
   const totalPaid = billings
-    .filter((b) => b.paymentDetails?.paymentStatus === 'completed' || b.status === 'paid')
+    .filter((b) => (b.paymentDetails?.paymentStatus || '').toLowerCase() === 'completed' || (b.status || '').toLowerCase() === 'paid')
     .reduce((s, b) => s + (b.summary?.totalAmount || 0), 0);
 
   const totalOutstanding = billings
-    .filter((b) => b.paymentDetails?.paymentStatus === 'pending' || b.status === 'issued' || b.status === 'draft')
+    .filter((b) => {
+      const pStatus = (b.paymentDetails?.paymentStatus || '').toLowerCase();
+      const bStatus = (b.status || '').toLowerCase();
+      return pStatus === 'pending' || pStatus === 'partial' || pStatus === 'failed' || bStatus === 'issued' || bStatus === 'draft';
+    })
     .reduce((s, b) => s + (b.summary?.totalAmount || 0), 0);
 
   const totalBilled = billings.reduce((s, b) => s + (b.summary?.totalAmount || 0), 0);

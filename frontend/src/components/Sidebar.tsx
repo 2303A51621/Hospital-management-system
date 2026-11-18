@@ -104,10 +104,9 @@ export default function Sidebar() {
       ],
     },
     {
-      group: 'FINANCIAL & FAMILY',
+      group: 'FINANCIAL & BILLING',
       items: [
         { path: '/patient/payments', label: 'Payments & Invoices', icon: CreditCard },
-        { path: '/patient/family', label: 'Family Members', icon: Users },
         { path: '/patient/messages', label: 'Messages', icon: MessageSquare },
       ],
     },

@@ -49,16 +49,44 @@ export default function PatientDashboardPage() {
   }, []);
 
   const patient = data?.patient;
-  const stats = data?.stats || {
+  const stats = data?.stats || data?.metrics || {
     totalAppointments: 0,
+    activeAppointments: 0,
+    activeAppointmentsCount: 0,
     upcomingAppointments: 0,
     completedAppointments: 0,
     pendingAppointments: 0,
     cancelledAppointments: 0,
     prescriptionsCount: 0,
+    totalPrescriptionsCount: 0,
     pendingLabReports: 0,
     outstandingPayment: 0,
+    totalOutstandingPayment: 0,
   };
+
+  const activeAppointments = data?.activeAppointments || data?.upcomingAppointments || [];
+  const activeAppointmentsCount =
+    stats.activeAppointments ??
+    stats.activeAppointmentsCount ??
+    stats.upcomingAppointments ??
+    stats.upcomingAppointmentsCount ??
+    activeAppointments.length ??
+    0;
+  const pendingAppointmentsCount = stats.pendingAppointments ?? stats.pendingAppointmentsCount ?? 0;
+
+  const prescriptionsList = data?.prescriptions || data?.recentPrescriptions || [];
+  const prescriptionsCount =
+    stats.prescriptionsCount ??
+    stats.totalPrescriptionsCount ??
+    prescriptionsList.length ??
+    0;
+
+  const outstandingDue =
+    stats.outstandingPayment ??
+    stats.totalOutstandingPayment ??
+    0;
+
+  const labReportsList = data?.labReports || data?.pendingReports || [];
 
   return (
     <div className="flex h-screen bg-[#f8fafc] text-slate-800">
@@ -121,17 +149,17 @@ export default function PatientDashboardPage() {
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="clinical-card p-5 border-l-4 border-l-teal-600">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Upcoming Visits</span>
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Active Appointments</span>
                   <div className="p-2.5 bg-teal-50 text-teal-700 rounded-xl">
                     <Calendar size={18} />
                   </div>
                 </div>
                 <div className="mt-3">
-                  <span className="text-3xl font-extrabold text-slate-900">{stats.upcomingAppointments}</span>
-                  <span className="text-xs text-slate-500 ml-2">scheduled</span>
+                  <span className="text-3xl font-extrabold text-slate-900">{activeAppointmentsCount}</span>
+                  <span className="text-xs text-slate-500 ml-2">active</span>
                 </div>
                 <div className="mt-3 flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
-                  <span>Pending approval: {stats.pendingAppointments}</span>
+                  <span>Pending approval: {pendingAppointmentsCount}</span>
                   <Link to="/patient/appointments" className="text-teal-700 hover:underline font-semibold flex items-center gap-1">
                     View <ChevronRightIcon />
                   </Link>
@@ -146,7 +174,7 @@ export default function PatientDashboardPage() {
                   </div>
                 </div>
                 <div className="mt-3">
-                  <span className="text-3xl font-extrabold text-slate-900">{stats.prescriptionsCount}</span>
+                  <span className="text-3xl font-extrabold text-slate-900">{prescriptionsCount}</span>
                   <span className="text-xs text-slate-500 ml-2">digital Rx</span>
                 </div>
                 <div className="mt-3 flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
@@ -165,7 +193,7 @@ export default function PatientDashboardPage() {
                   </div>
                 </div>
                 <div className="mt-3">
-                  <span className="text-3xl font-extrabold text-slate-900">{data?.labReports?.length || 0}</span>
+                  <span className="text-3xl font-extrabold text-slate-900">{labReportsList.length}</span>
                   <span className="text-xs text-slate-500 ml-2">lab results</span>
                 </div>
                 <div className="mt-3 flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
@@ -184,12 +212,12 @@ export default function PatientDashboardPage() {
                   </div>
                 </div>
                 <div className="mt-3">
-                  <span className="text-3xl font-extrabold text-slate-900">₹{stats.outstandingPayment?.toLocaleString() || 0}</span>
+                  <span className="text-3xl font-extrabold text-slate-900">₹{Number(outstandingDue).toLocaleString()}</span>
                   <span className="text-xs text-slate-500 ml-2">due</span>
                 </div>
                 <div className="mt-3 flex items-center justify-between text-xs text-slate-500 pt-2 border-t border-slate-100">
-                  <span className={stats.outstandingPayment > 0 ? 'text-amber-600 font-semibold' : 'text-emerald-600'}>
-                    {stats.outstandingPayment > 0 ? 'Payment required' : 'All clear'}
+                  <span className={outstandingDue > 0 ? 'text-amber-600 font-semibold' : 'text-emerald-600'}>
+                    {outstandingDue > 0 ? 'Payment required' : 'All clear'}
                   </span>
                   <Link to="/patient/payments" className="text-amber-700 hover:underline font-semibold flex items-center gap-1">
                     Pay <ChevronRightIcon />
@@ -203,7 +231,7 @@ export default function PatientDashboardPage() {
               <div className="flex items-center justify-between mb-3 px-1">
                 <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500">Healthcare Quick Actions</span>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                 <Link
                   to="/patient/doctors"
                   className="group flex flex-col items-center justify-center p-3 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-teal-50 hover:border-teal-200 transition-all text-center"
@@ -246,17 +274,6 @@ export default function PatientDashboardPage() {
                   </div>
                   <span className="text-xs font-bold text-slate-800 group-hover:text-blue-900">Video Consult</span>
                   <span className="text-[10px] text-slate-400">Live Virtual Clinic</span>
-                </Link>
-
-                <Link
-                  to="/patient/family"
-                  className="group flex flex-col items-center justify-center p-3 rounded-2xl border border-slate-100 bg-slate-50 hover:bg-purple-50 hover:border-purple-200 transition-all text-center"
-                >
-                  <div className="h-10 w-10 rounded-xl bg-purple-100 text-purple-800 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                    <User size={20} />
-                  </div>
-                  <span className="text-xs font-bold text-slate-800 group-hover:text-purple-900">Family Members</span>
-                  <span className="text-[10px] text-slate-400">Manage Dependents</span>
                 </Link>
 
                 <Link
@@ -305,12 +322,12 @@ export default function PatientDashboardPage() {
                   </div>
                 )}
 
-                {/* Upcoming Appointments List */}
+                {/* Active Appointments List */}
                 <div className="clinical-card p-6">
                   <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
                     <div>
-                      <h3 className="text-base font-bold text-slate-900">Upcoming Appointments</h3>
-                      <p className="text-xs text-slate-500 mt-0.5">Your confirmed and scheduled consultations</p>
+                      <h3 className="text-base font-bold text-slate-900">Active Appointments</h3>
+                      <p className="text-xs text-slate-500 mt-0.5">Your active, scheduled and confirmed consultations</p>
                     </div>
                     <Link
                       to="/patient/appointments"
@@ -322,14 +339,14 @@ export default function PatientDashboardPage() {
 
                   {loading ? (
                     <div className="py-12 text-center text-slate-400">Loading your schedule...</div>
-                  ) : !data?.upcomingAppointments || data.upcomingAppointments.length === 0 ? (
+                  ) : activeAppointments.length === 0 ? (
                     <div className="text-center py-10 px-4">
                       <div className="h-14 w-14 rounded-2xl bg-teal-50 text-teal-700 mx-auto flex items-center justify-center mb-3">
                         <Calendar size={26} />
                       </div>
-                      <h4 className="font-bold text-sm text-slate-800">No Upcoming Appointments</h4>
+                      <h4 className="font-bold text-sm text-slate-800">No Active Appointments</h4>
                       <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-4">
-                        You have no consultations scheduled for the coming days. Book with our expert clinicians anytime.
+                        You have no active consultations at the moment. Book with our expert clinicians anytime.
                       </p>
                       <Link
                         to="/patient/book-appointment"
@@ -340,7 +357,7 @@ export default function PatientDashboardPage() {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {data.upcomingAppointments.map((apt: any) => {
+                      {activeAppointments.map((apt: any) => {
                         const doctorUser = apt.doctorId?.userId || {};
                         const doctorName = doctorUser.name || `Dr. ${doctorUser.firstName || ''} ${doctorUser.lastName || ''}`.trim() || 'Attending Doctor';
                         return (
@@ -374,7 +391,7 @@ export default function PatientDashboardPage() {
                                   <span>{apt.doctorId?.specialization || 'General Consultation'}</span>
                                   <span>•</span>
                                   <span className="font-medium text-slate-700">
-                                    {new Date(apt.appointmentDate).toLocaleDateString(undefined, {
+                                    {new Date(apt.appointmentDate || apt.date).toLocaleDateString(undefined, {
                                       weekday: 'short',
                                       month: 'short',
                                       day: 'numeric',
@@ -424,11 +441,11 @@ export default function PatientDashboardPage() {
                     </Link>
                   </div>
 
-                  {!data?.prescriptions || data.prescriptions.length === 0 ? (
+                  {prescriptionsList.length === 0 ? (
                     <div className="text-center py-6 text-slate-400 text-xs">No recent prescriptions issued.</div>
                   ) : (
                     <div className="divide-y divide-slate-100">
-                      {data.prescriptions.slice(0, 3).map((rx: any) => {
+                      {prescriptionsList.slice(0, 5).map((rx: any) => {
                         const doc = rx.doctorId?.userId || {};
                         const docName = doc.name || `Dr. ${doc.firstName || ''} ${doc.lastName || ''}`.trim() || 'Clinician';
                         return (

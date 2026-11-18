@@ -54,7 +54,6 @@ import PatientPaymentsPage from './pages/patient/PatientPaymentsPage';
 import PatientTelemedicinePage from './pages/patient/PatientTelemedicinePage';
 import PatientMessagesPage from './pages/patient/PatientMessagesPage';
 import PatientFollowUpsPage from './pages/patient/PatientFollowUpsPage';
-import PatientFamilyPage from './pages/patient/PatientFamilyPage';
 import PatientFeedbackPage from './pages/patient/PatientFeedbackPage';
 import PatientHealthTipsPage from './pages/patient/PatientHealthTipsPage';
 import PatientEmergencyPage from './pages/patient/PatientEmergencyPage';
@@ -362,11 +361,7 @@ export default function App() {
         />
         <Route
           path="/patient/family"
-          element={
-            <ProtectedRoute requiredRoles={['patient', 'admin', 'super_admin']}>
-              <PatientFamilyPage />
-            </ProtectedRoute>
-          }
+          element={<Navigate to="/patient/dashboard" replace />}
         />
         <Route
           path="/patient/feedback"

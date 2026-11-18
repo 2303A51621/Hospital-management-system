@@ -22,7 +22,6 @@ export default function PatientBookAppointmentPage() {
   const isFollowUp = searchParams.get('followUp') === 'true';
 
   const [doctors, setDoctors] = useState<any[]>([]);
-  const [familyMembers, setFamilyMembers] = useState<any[]>([]);
   const [loadingDoctors, setLoadingDoctors] = useState(true);
 
   // Form State
@@ -40,7 +39,6 @@ export default function PatientBookAppointmentPage() {
   const [symptomsInput, setSymptomsInput] = useState('');
   const [symptomsList, setSymptomsList] = useState<string[]>([]);
   const [medicalNotes, setMedicalNotes] = useState('');
-  const [familyMemberId, setFamilyMemberId] = useState('');
   const [paymentMode, setPaymentMode] = useState<'pay_at_hospital' | 'online_simulation'>('pay_at_hospital');
 
   const [submitting, setSubmitting] = useState(false);
@@ -48,18 +46,14 @@ export default function PatientBookAppointmentPage() {
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [slotFilter, setSlotFilter] = useState<'all' | 'morning' | 'afternoon' | 'evening' | 'night'>('all');
 
-  // Load doctors & family members
+  // Load doctors
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
         setLoadingDoctors(true);
-        const [docsRes, famRes] = await Promise.all([
-          doctorAPI.getAll(1, '', 50),
-          patientPortalAPI.getFamilyMembers().catch(() => ({ data: { data: [] } })),
-        ]);
+        const docsRes = await doctorAPI.getAll(1, '', 50);
         const docs = docsRes.data?.data || [];
         setDoctors(docs);
-        setFamilyMembers(famRes.data?.data || []);
 
         if (preselectedDoctorId && docs.some((d: any) => d._id === preselectedDoctorId)) {
           setSelectedDoctorId(preselectedDoctorId);
@@ -159,9 +153,6 @@ export default function PatientBookAppointmentPage() {
         paymentMode,
         paymentMethod: paymentMode === 'online_simulation' ? 'upi' : 'pay_at_hospital',
       };
-      if (familyMemberId) {
-        payload.familyMemberId = familyMemberId;
-      }
 
       const res = await patientPortalAPI.bookAppointment(payload);
       toast.success('Appointment successfully booked!');
@@ -344,28 +335,6 @@ export default function PatientBookAppointmentPage() {
                         </select>
                       </div>
                     )}
-
-                    {/* Dependent Selection */}
-                    <div>
-                      <label className="text-xs font-bold text-slate-600 block mb-2 flex items-center justify-between">
-                        <span>Book for Self or Family Member</span>
-                        <Link to="/patient/family" className="text-teal-700 font-normal hover:underline text-[11px]">
-                          + Manage Dependents
-                        </Link>
-                      </label>
-                      <select
-                        value={familyMemberId}
-                        onChange={(e) => setFamilyMemberId(e.target.value)}
-                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-medium focus:ring-2 focus:ring-teal-600 focus:outline-none bg-white"
-                      >
-                        <option value="">Self (Account Holder)</option>
-                        {familyMembers.map((fam) => (
-                          <option key={fam._id} value={fam._id}>
-                            {fam.fullName} ({fam.relationship})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
                   </div>
 
                   {/* Step 2: Date & Slot Selection */}
