@@ -1,4 +1,4 @@
-const { asyncHandler } = require('../middleware/errorHandler');
+const { asyncHandler } = require('./_helpers');
 const OnlineConsultation = require('../models/OnlineConsultation');
 const ConsultationMessage = require('../models/ConsultationMessage');
 const Appointment = require('../models/Appointment');

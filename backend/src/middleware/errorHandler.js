@@ -32,3 +32,8 @@ exports.notFound = (req, res, next) => {
   res.status(404);
   next(error);
 };
+
+// Async wrapper to avoid try-catch blocks
+exports.asyncHandler = (fn) => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};

@@ -120,7 +120,7 @@ export default function PatientDashboardPage() {
                     <p className="text-sm text-teal-100/90 mt-1 flex flex-wrap items-center gap-x-4 gap-y-1">
                       <span>Patient ID: <strong className="font-mono text-white">{patient?.patientId || 'KH-PAT-NEW'}</strong></span>
                       <span>Blood Group: <strong className="text-white">{patient?.bloodGroup || 'Not Recorded'}</strong></span>
-                      <span>Emergency: <strong className="text-rose-300">{patient?.emergencyContact?.phone || '108'}</strong></span>
+                      <span>Emergency: <strong className="text-rose-300">{patient?.emergencyContact?.phone || (typeof patient?.emergencyContact === 'string' ? patient.emergencyContact : '108')}</strong></span>
                     </p>
                   </div>
                 </div>

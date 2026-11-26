@@ -177,13 +177,17 @@ export default function PatientFamilyPage() {
                           {fam.allergies && fam.allergies.length > 0 && (
                             <div className="flex items-start gap-1.5 text-rose-700">
                               <AlertTriangle size={13} className="shrink-0 mt-0.5" />
-                              <span className="truncate">Allergies: {fam.allergies.join(', ')}</span>
+                              <span className="truncate">
+                                Allergies: {fam.allergies.map((a: any) => typeof a === 'string' ? a : a?.allergen || a?.name || '').filter(Boolean).join(', ')}
+                              </span>
                             </div>
                           )}
                           {fam.chronicConditions && fam.chronicConditions.length > 0 && (
                             <div className="flex items-start gap-1.5 text-amber-700">
                               <HeartPulse size={13} className="shrink-0 mt-0.5" />
-                              <span className="truncate">Conditions: {fam.chronicConditions.join(', ')}</span>
+                              <span className="truncate">
+                                Conditions: {fam.chronicConditions.map((c: any) => typeof c === 'string' ? c : c?.disease || c?.condition || c?.name || '').filter(Boolean).join(', ')}
+                              </span>
                             </div>
                           )}
                         </div>

@@ -346,9 +346,9 @@ export default function DoctorPatientsPage() {
 
                       <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
                         <h4 className="font-bold text-slate-800 text-sm border-b pb-1">Emergency Contact</h4>
-                        <p><strong className="text-slate-500">Contact Person:</strong> {selectedPatient.emergencyContact?.name || 'None listed'}</p>
-                        <p><strong className="text-slate-500">Relationship:</strong> {selectedPatient.emergencyContact?.relationship || 'N/A'}</p>
-                        <p><strong className="text-slate-500">Emergency Phone:</strong> {selectedPatient.emergencyContact?.phone || 'N/A'}</p>
+                        <p><strong className="text-slate-500">Contact Person:</strong> {(typeof selectedPatient.emergencyContact === 'object' ? selectedPatient.emergencyContact?.name : selectedPatient.emergencyContact) || 'None listed'}</p>
+                        <p><strong className="text-slate-500">Relationship:</strong> {(typeof selectedPatient.emergencyContact === 'object' ? selectedPatient.emergencyContact?.relationship : 'N/A') || 'N/A'}</p>
+                        <p><strong className="text-slate-500">Emergency Phone:</strong> {(typeof selectedPatient.emergencyContact === 'object' ? selectedPatient.emergencyContact?.phone : selectedPatient.emergencyContact) || 'N/A'}</p>
                         <h4 className="font-bold text-slate-800 text-sm border-b pt-2 pb-1">Insurance</h4>
                         <p><strong className="text-slate-500">Provider:</strong> {selectedPatient.insuranceDetails?.providerName || 'Self-pay'}</p>
                         <p><strong className="text-slate-500">Policy Number:</strong> {selectedPatient.insuranceDetails?.policyNumber || 'N/A'}</p>
