@@ -408,9 +408,11 @@ exports.bookAppointment = asyncHandler(async (req, res) => {
     reason: reason || 'Routine Clinical Consultation',
     symptoms: symptomsList,
     previousReports,
-    status: 'pending',
-    paymentStatus: paymentMethod === 'pay_at_hospital' ? 'pending' : 'pending',
+    status: (req.body.paymentMode === 'online_simulation' || req.body.paymentStatus === 'completed') ? 'confirmed' : 'pending',
   });
+
+  const isPaidOnline = req.body.paymentMode === 'online_simulation' || req.body.paymentStatus === 'completed' || req.body.isPaid === true;
+  const initialPaymentStatus = isPaidOnline ? 'completed' : 'pending';
 
   // Automatically create corresponding Billing invoice
   const billing = await Billing.create({
@@ -434,9 +436,11 @@ exports.bookAppointment = asyncHandler(async (req, res) => {
     },
     paymentDetails: {
       paymentMethod: paymentMethod === 'pay_at_hospital' ? 'pay_at_hospital' : 'upi',
-      paymentStatus: 'pending',
+      paymentStatus: initialPaymentStatus,
+      transactionId: isPaidOnline ? (req.body.transactionId || `UPI-${Date.now().toString().slice(-6)}`) : undefined,
+      paymentDate: isPaidOnline ? new Date() : undefined,
     },
-    status: 'issued',
+    status: isPaidOnline ? 'paid' : 'issued',
   });
 
   appointment.billingId = billing._id;

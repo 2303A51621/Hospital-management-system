@@ -342,7 +342,7 @@ export default function NursePatientsPage() {
                               {profileData.patient?.chronicDiseases?.length > 0 ? (
                                 <ul className="list-disc pl-4 space-y-0.5">
                                   {profileData.patient.chronicDiseases.map((c: any, i: number) => (
-                                    <li key={i}>{typeof c === 'string' ? c : c.disease}</li>
+                                    <li key={i}>{typeof c === 'string' ? c : c?.disease || c?.condition || c?.name || 'Chronic condition'}</li>
                                   ))}
                                 </ul>
                               ) : (
