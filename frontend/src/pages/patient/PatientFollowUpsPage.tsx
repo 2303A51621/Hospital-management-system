@@ -126,7 +126,7 @@ export default function PatientFollowUpsPage() {
 
                         <div className="self-end md:self-center">
                           <Link
-                            to={`/patient/book-appointment?doctorId=${item.doctorId}&followUp=true`}
+                            to={`/patient/book-appointment?doctorId=${typeof item.doctorId === 'object' ? item.doctorId?._id : (item.doctorId || '')}&followUp=true`}
                             className="inline-flex items-center gap-1.5 px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold shadow-md shadow-teal-700/20"
                           >
                             <CalendarPlus size={14} /> Schedule Follow-up Visit
