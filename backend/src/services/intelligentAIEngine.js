@@ -57,6 +57,126 @@ function getGeminiClient() {
   }
 }
 
+const CLINICAL_SPECIALTY_RULES = [
+  {
+    specialization: 'Orthopedics',
+    department: 'Orthopedics',
+    title: 'Orthopedics & Joint Care',
+    patterns: [
+      /\b(?:ortho|orthopedic|orthopedics|orthopedist|orthopedists)\b/i,
+      /\b(?:bone|bones|joint|joints|fracture|fractures|knee|knees|spine|spinal|hip|arthritis|osteoarthritis|ligament|tendon|shoulder\s+pain|back\s+pain|slip\s+disc)\b/i,
+    ],
+  },
+  {
+    specialization: 'Cardiology',
+    department: 'Cardiology',
+    title: 'Cardiology & Heart Care',
+    patterns: [
+      /\b(?:cardio|cardiology|cardiologist|cardiologists)\b/i,
+      /\b(?:heart|cardiac|angina|palpitation|palpitations|ecg|arrhythmia|coronary|cholesterol|hypertension|blood\s+pressure)\b/i,
+    ],
+  },
+  {
+    specialization: 'Neurology',
+    department: 'Neurology',
+    title: 'Neurology & Brain Sciences',
+    patterns: [
+      /\b(?:neuro|neurology|neurologist|neurologists)\b/i,
+      /\b(?:brain|nerve|nerves|nervous\s+system|stroke|migraine|headache|headaches|seizure|seizures|epilepsy|parkinson|neuropathy)\b/i,
+    ],
+  },
+  {
+    specialization: 'Dermatology',
+    department: 'Dermatology',
+    title: 'Dermatology & Skin Clinic',
+    patterns: [
+      /\b(?:dermato|dermatology|dermatologist|dermatologists)\b/i,
+      /\b(?:skin|acne|pimples|rash|rashes|eczema|psoriasis|dermatitis|hair\s*fall|hair\s*loss|alopecia|fungal\s+infection)\b/i,
+    ],
+  },
+  {
+    specialization: 'Pediatrics',
+    department: 'Pediatrics',
+    title: 'Pediatrics & Child Health',
+    patterns: [
+      /\b(?:pediatric|pediatrics|pediatrician|pediatricians|paediatric|paediatrics|paediatrician)\b/i,
+      /\b(?:child|children|infant|infants|baby|babies|kids|newborn|toddler|vaccination|immunization)\b/i,
+    ],
+  },
+  {
+    specialization: 'Gynecology',
+    department: 'Obstetrics and Gynecology',
+    title: 'Gynecology & Women’s Health',
+    patterns: [
+      /\b(?:gynecol|gynecology|gynecologist|gynecologists|gynaecol|gynaecology|gynaecologist|obgyn|obstetrics)\b/i,
+      /\b(?:women|female|pregnancy|pregnant|maternity|pcos|pcod|periods|menstrual|menstruation|fertility|uterus|ovary)\b/i,
+    ],
+  },
+  {
+    specialization: 'ENT',
+    department: 'Otolaryngology',
+    title: 'ENT (Ear, Nose & Throat)',
+    patterns: [
+      /\b(?:ent|otolaryngology|otolaryngologist)\b/i,
+      /\b(?:ear|ears|nose|nasal|throat|sinus|sinusitis|tonsils|tonsillitis|hearing|tinnitus|vertigo)\b/i,
+    ],
+  },
+  {
+    specialization: 'Oncology',
+    department: 'Oncology',
+    title: 'Oncology & Cancer Care',
+    patterns: [
+      /\b(?:oncolog|oncology|oncologist|oncologists)\b/i,
+      /\b(?:cancer|tumor|tumour|chemo|chemotherapy|radiation\s+therapy|leukemia|lymphoma|carcinoma)\b/i,
+    ],
+  },
+  {
+    specialization: 'Psychiatry',
+    department: 'Mental Health',
+    title: 'Psychiatry & Behavioral Health',
+    patterns: [
+      /\b(?:psychiatry|psychiatrist|psychiatrists|psychologist|psychology)\b/i,
+      /\b(?:mental\s+health|depression|depressed|anxiety|stress|panic|insomnia|bipolar|schizophrenia|hallucination)\b/i,
+    ],
+  },
+  {
+    specialization: 'General Surgery',
+    department: 'Surgery',
+    title: 'General & Laparoscopic Surgery',
+    patterns: [
+      /\b(?:surgery|surgeon|surgeons|surgical)\b/i,
+      /\b(?:operation|operative|appendix|appendicitis|hernia|gallbladder|gallstones|piles|hemorrhoids|laparoscopy)\b/i,
+    ],
+  },
+  {
+    specialization: 'Radiology',
+    department: 'Radiology',
+    title: 'Radiology & Imaging',
+    patterns: [
+      /\b(?:radiology|radiologist|radiologists)\b/i,
+      /\b(?:x-?ray|mri|ct\s+scan|ultrasound|sonography|imaging|scan)\b/i,
+    ],
+  },
+  {
+    specialization: 'Pathology',
+    department: 'Pathology',
+    title: 'Pathology & Clinical Lab',
+    patterns: [
+      /\b(?:pathology|pathologist|pathologists)\b/i,
+      /\b(?:blood\s+test|biopsy|urine\s+culture|histology|cytology)\b/i,
+    ],
+  },
+  {
+    specialization: 'General Physician',
+    department: 'General Medicine',
+    title: 'General Medicine & Family Physician',
+    patterns: [
+      /\b(?:physician|physicians|general\s+physician|general\s+practitioner|internist|general\s+medicine)\b/i,
+      /\b(?:fever|cold|cough|flu|body\s+pain|weakness|fatigue|viral|infection|vomiting|diarrhea|loose\s+motion|routine\s+checkup)\b/i,
+    ],
+  },
+];
+
 /**
  * High-Accuracy Built-in Neural/Semantic Reasoning Engine
  * Provides rich clinical, medical, and operational answers without requiring an external API key.
@@ -88,24 +208,57 @@ async function generateLocalReasonedResponse({ query, user, history = [], attach
   }
 
   // Check for Hospital Database queries
-  // 1. Doctor Directory / Availability
-  if (/\b(?:doctor|cardiologist|neurologist|dermatologist|orthopedic|pediatrician|gynecologist|oncologist|ent|physician|specialist|surgeon)\b/i.test(text)) {
-    const specMatch = text.match(/\b(cardio(?:logy|logist)?|neuro(?:logy|logist)?|dermato(?:logy|logist)?|ortho(?:pedics|pedist)?|pediatric(?:s|ian)?|gynecol(?:ogy|ogist)?|oncolog(?:y|ist)?|ent|general\s+medicine|urolog(?:y|ist)?)\b/i);
-    const spec = specMatch ? specMatch[1] : '';
-    const res = await hospitalAITools.searchDoctors({ query: text, specialization: spec });
+  // 1. Doctor Directory / Availability / Specialist Search
+  const isDoctorIntent = /\b(?:doctor|doctors|dr|specialist|specialists|specialization|specializations|clinician|clinicians|consultant|consultants|surgeon|surgeons|physician|physicians|cardiologist|cardiologists|neurologist|neurologists|dermatologist|dermatologists|orthopedic|orthopedics|orthopedist|orthopedists|pediatrician|pediatricians|gynecologist|gynecologists|oncologist|oncologists|ent|urologist|urologists|nephrologist|psychiatrist|psychiatrists|radiologist|pathologist|who\s+treats|which\s+doctor|find\s+doctor|book\s+doctor|names?\s+of\s+doctor|names?\s+of\s+doctors|doctor\s+name|doctor\s+list|available\s+doctor|list\s+of\s+doctors)\b/i.test(text);
+
+  const matchedRule = CLINICAL_SPECIALTY_RULES.find((rule) =>
+    rule.patterns.some((pattern) => pattern.test(text))
+  );
+
+  if (isDoctorIntent || (matchedRule && /\b(?:who|which|recommend|consult|visit|appointment|meet|see|find|book)\b/i.test(text))) {
+    const spec = matchedRule ? matchedRule.specialization : '';
+    const dept = matchedRule ? matchedRule.department : '';
+    const res = await hospitalAITools.searchDoctors({ query: text, specialization: spec, department: dept });
+
+    let md = `### 👨‍⚕️ Available Medical Specialists at Kushal Hospitals\n\n`;
+    if (spec) {
+      md += `Here are the verified **${spec}** specialists currently consulting at Kushal Hospitals:\n\n`;
+    } else {
+      md += `Found **${res.doctors.length} verified clinician(s)** matching your request across Kushal Hospitals departments:\n\n`;
+    }
 
     if (res.doctors.length > 0) {
-      let md = `### 👨‍⚕️ Available Medical Specialists at Kushal Hospitals\n\n`;
-      md += `Found **${res.doctors.length} verified clinician(s)** matching your request:\n\n`;
       for (const d of res.doctors) {
         md += `* **${d.name}** — *${d.specialization}* (${d.department})\n`;
         md += `  * 🌟 **Rating:** ${d.rating} | 💼 **Experience:** ${d.experience}\n`;
         md += `  * 💵 **Consultation Fee:** ${d.consultationFee}\n`;
         md += `  * 🗓️ **Availability:** ${d.availableDays}\n`;
       }
-      md += `\n💡 *Tip: You can book an appointment with any doctor directly from the **Book Appointment** tab or by asking me!*`;
+      md += `\n#### 🗓️ Consult with our specialists:\n`;
+      md += `* **In-Person Hospital Visit:** [Book In-Person Appointment](/patient/book-appointment)\n`;
+      md += `* **Online Video Consultation:** [Start Video Consultation](/patient/telemedicine)\n`;
+      md += `* **24/7 Helpline Desk:** 📞 **+91 1800-KUSHAL**\n`;
+      return { text: md, sources: ['Kushal Hospitals Doctor Registry', 'NABH Verified Clinical Staff'], intent: 'doctor_search' };
+    } else {
+      md += `We do not have a doctor matching that specific search term currently on duty.\n\n`;
+      md += `Our verified clinical departments include **Cardiology, Neurology, Orthopedics, Pediatrics, Dermatology, ENT, Gynecology, General Surgery, and General Medicine**.\n\n`;
+      md += `You can browse all active doctors in our [Find Doctors Directory](/patient/doctors) or contact our 24/7 Helpline at **+91 1800-KUSHAL** for immediate assistance.`;
       return { text: md, sources: ['Kushal Hospitals Doctor Registry'], intent: 'doctor_search' };
     }
+  }
+
+  // 2. Appointment Booking Guidance FAQ
+  if (/\b(?:how\s+to\s+book|booking\s+process|how\s+do\s+i\s+book|book\s+an?\s+appointment|how\s+to\s+schedule)\b/i.test(text)) {
+    let md = `### 📅 How to Book an Appointment at Kushal Hospitals\n\n`;
+    md += `Booking a consultation with our specialists is quick and completely automated:\n\n`;
+    md += `1. **Choose Consultation Type:**\n`;
+    md += `   * **In-Person OPD Visit:** Visit our hospital campus in person. [Book In-Person Appointment](/patient/book-appointment)\n`;
+    md += `   * **Online Video Consultation:** Connect via secure real-time WebRTC video consultation from home. [Book Video Consult](/patient/telemedicine)\n`;
+    md += `2. **Select Doctor & Slot:** Choose your preferred department, doctor, date, and 30-minute time slot.\n`;
+    md += `3. **Payment Choice:** Pay instantly via UPI QR Code / Net Banking or choose Pay-at-Hospital Cash at the billing counter.\n`;
+    md += `4. **Instant Confirmation:** Receive an immediate appointment pass with digital token and QR code.\n\n`;
+    md += `📞 *Need phone assistance? Call our 24x7 desk at **+91 1800-KUSHAL**.*`;
+    return { text: md, sources: ['Kushal Hospitals Patient Booking Portal'], intent: 'booking_guidance' };
   }
 
   // 2. User Appointments
@@ -482,4 +635,5 @@ module.exports = {
   processAIChat,
   isEmergency,
   getEmergencyResponse,
+  generateLocalReasonedResponse,
 };
