@@ -206,15 +206,9 @@ export default function Sidebar() {
     },
     {
       path: '/emergency-admin',
-      label: 'Emergency Admin',
-      icon: Siren,
-      roles: ['admin', 'receptionist'],
-    },
-    {
-      path: '/emergency-admission',
       label: 'Emergency & Admission',
       icon: Siren,
-      roles: ['admin'],
+      roles: ['admin', 'receptionist'],
     },
     {
       path: '/analytics',
