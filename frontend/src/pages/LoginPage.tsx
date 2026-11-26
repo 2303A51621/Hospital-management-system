@@ -29,6 +29,23 @@ export default function LoginPage() {
     }
   };
 
+  const handleQuickLogin = async (demoIdentifier: string, demoPassword: string) => {
+    setIdentifier(demoIdentifier);
+    setPassword(demoPassword);
+    setLoading(true);
+
+    try {
+      await login(demoIdentifier, demoPassword);
+      toast.success('Login successful');
+      navigate('/dashboard');
+    } catch (error: unknown) {
+      const apiError = error as { response?: { data?: { message?: string } } };
+      toast.error(apiError.response?.data?.message || 'Login failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="auth-shell min-h-screen px-4 py-10">
       <div className="auth-glow auth-glow-left" aria-hidden="true" />
@@ -46,35 +63,46 @@ export default function LoginPage() {
             Continue to your personalized dashboard, appointments, and secure patient workflows.
           </p>
           <div className="mt-6 rounded-2xl border border-sky-100 bg-white/80 p-5 space-y-3">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Quick Role Access (Demo)</p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500">Quick Role Access (Demo)</p>
+              <span className="text-[11px] text-slate-400">1-click instant login</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2.5">
               <button
                 type="button"
-                onClick={() => { setIdentifier('nurse@kushalhospitals.com'); setPassword('Nurse@123456'); }}
-                className="px-2.5 py-1.5 rounded-xl border border-teal-200 bg-teal-50 text-teal-800 text-xs font-bold hover:bg-teal-100 transition text-left"
+                disabled={loading}
+                onClick={() => handleQuickLogin('nurse@kushalhospitals.com', 'Nurse@123456')}
+                className="px-3 py-2 rounded-xl border border-teal-200 bg-teal-50 text-teal-800 hover:bg-teal-100 transition text-left flex flex-col gap-0.5 disabled:opacity-60 shadow-sm"
               >
-                🩺 Nurse Portal
+                <span className="text-xs font-bold flex items-center gap-1.5">🩺 Nurse Portal</span>
+                <span className="text-[10px] text-teal-600 font-medium truncate">nurse@kushalhospitals.com</span>
               </button>
               <button
                 type="button"
-                onClick={() => { setIdentifier('doctor@hospital.com'); setPassword('Doctor@123456'); }}
-                className="px-2.5 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs font-bold hover:bg-emerald-100 transition text-left"
+                disabled={loading}
+                onClick={() => handleQuickLogin('doctor@kushalhospitals.com', 'Doctor@123456')}
+                className="px-3 py-2 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 transition text-left flex flex-col gap-0.5 disabled:opacity-60 shadow-sm"
               >
-                👨‍⚕️ Doctor Portal
+                <span className="text-xs font-bold flex items-center gap-1.5">👨‍⚕️ Doctor Portal</span>
+                <span className="text-[10px] text-emerald-600 font-medium truncate">doctor@kushalhospitals.com</span>
               </button>
               <button
                 type="button"
-                onClick={() => { setIdentifier('patient@hospital.com'); setPassword('Patient@123456'); }}
-                className="px-2.5 py-1.5 rounded-xl border border-blue-200 bg-blue-50 text-blue-800 text-xs font-bold hover:bg-blue-100 transition text-left"
+                disabled={loading}
+                onClick={() => handleQuickLogin('patient@kushalhospitals.com', 'Patient@123456')}
+                className="px-3 py-2 rounded-xl border border-blue-200 bg-blue-50 text-blue-800 hover:bg-blue-100 transition text-left flex flex-col gap-0.5 disabled:opacity-60 shadow-sm"
               >
-                👤 Patient Portal
+                <span className="text-xs font-bold flex items-center gap-1.5">👤 Patient Portal</span>
+                <span className="text-[10px] text-blue-600 font-medium truncate">patient@kushalhospitals.com</span>
               </button>
               <button
                 type="button"
-                onClick={() => { setIdentifier('admin@hospital.com'); setPassword('Admin@123456'); }}
-                className="px-2.5 py-1.5 rounded-xl border border-purple-200 bg-purple-50 text-purple-800 text-xs font-bold hover:bg-purple-100 transition text-left"
+                disabled={loading}
+                onClick={() => handleQuickLogin('admin@kushalhospitals.com', 'Admin@123456')}
+                className="px-3 py-2 rounded-xl border border-purple-200 bg-purple-50 text-purple-800 hover:bg-purple-100 transition text-left flex flex-col gap-0.5 disabled:opacity-60 shadow-sm"
               >
-                🛡️ Admin Panel
+                <span className="text-xs font-bold flex items-center gap-1.5">🛡️ Admin Panel</span>
+                <span className="text-[10px] text-purple-600 font-medium truncate">admin@kushalhospitals.com</span>
               </button>
             </div>
           </div>
