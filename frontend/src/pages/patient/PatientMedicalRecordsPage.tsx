@@ -75,7 +75,7 @@ export default function PatientMedicalRecordsPage() {
 
   const timeline = data?.timeline || [];
   const allergies = data?.allergies || [];
-  const conditions = data?.chronicConditions || [];
+  const conditions = data?.chronicConditions || data?.chronicDiseases || [];
 
   const filteredTimeline = timeline.filter((item: any) => {
     if (filterType !== 'all' && item.type !== filterType) return false;
@@ -136,14 +136,19 @@ export default function PatientMedicalRecordsPage() {
                   <p className="text-xs text-slate-500 italic">No drug or food allergies recorded.</p>
                 ) : (
                   <div className="flex flex-wrap gap-2 mt-2">
-                    {allergies.map((allergy: string, i: number) => (
-                      <span
-                        key={i}
-                        className="px-3 py-1 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold"
-                      >
-                        {allergy}
-                      </span>
-                    ))}
+                    {allergies.map((allergy: any, i: number) => {
+                      const label = typeof allergy === 'string'
+                        ? allergy
+                        : (allergy?.allergen ? `${allergy.allergen}${allergy.severity ? ` (${allergy.severity})` : ''}` : 'Documented Allergy');
+                      return (
+                        <span
+                          key={i}
+                          className="px-3 py-1 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold"
+                        >
+                          {label}
+                        </span>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -161,14 +166,19 @@ export default function PatientMedicalRecordsPage() {
                   <p className="text-xs text-slate-500 italic">No chronic ailments or existing comorbidities noted.</p>
                 ) : (
                   <div className="flex flex-wrap gap-2 mt-2">
-                    {conditions.map((cond: string, i: number) => (
-                      <span
-                        key={i}
-                        className="px-3 py-1 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold"
-                      >
-                        {cond}
-                      </span>
-                    ))}
+                    {conditions.map((cond: any, i: number) => {
+                      const label = typeof cond === 'string'
+                        ? cond
+                        : (cond?.disease || cond?.name || cond?.condition || 'Chronic Condition');
+                      return (
+                        <span
+                          key={i}
+                          className="px-3 py-1 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold"
+                        >
+                          {label}
+                        </span>
+                      );
+                    })}
                   </div>
                 )}
               </div>

@@ -210,7 +210,7 @@ export default function NursePatientsPage() {
                         {/* Allergies Pill */}
                         {p.allergies && p.allergies.length > 0 && (
                           <div className="flex items-center gap-1.5 text-[11px] text-rose-700 font-bold bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200">
-                            <AlertTriangle size={12} /> Allergies: {p.allergies.join(', ')}
+                            <AlertTriangle size={12} /> Allergies: {p.allergies.map((a: any) => typeof a === 'string' ? a : a?.allergen || '').filter(Boolean).join(', ')}
                           </div>
                         )}
                       </div>

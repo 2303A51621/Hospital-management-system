@@ -607,12 +607,24 @@ exports.getPatientMedicalRecords = asyncHandler(async (req, res) => {
 
   timeline.sort((a, b) => new Date(b.date) - new Date(a.date));
 
+  const formattedAllergies = (patient.allergies || []).map((a) => {
+    if (typeof a === 'string') return a;
+    return a?.allergen ? `${a.allergen}${a.severity ? ` (${a.severity})` : ''}` : 'Documented Allergy';
+  });
+
+  const formattedConditions = (patient.chronicDiseases || patient.chronicConditions || []).map((c) => {
+    if (typeof c === 'string') return c;
+    return c?.disease || c?.condition || 'Chronic Condition';
+  });
+
   res.json({
     success: true,
     data: {
       patient,
       timeline,
-      allergies: patient.allergies || [],
+      allergies: formattedAllergies,
+      rawAllergies: patient.allergies || [],
+      chronicConditions: formattedConditions,
       chronicDiseases: patient.chronicDiseases || [],
       medicalHistory: patient.medicalHistory || [],
     },

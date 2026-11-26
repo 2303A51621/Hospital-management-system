@@ -38,7 +38,7 @@ export default function PatientProfilePage() {
     try {
       setLoading(true);
       const res = await patientPortalAPI.getProfile();
-      const p = res.data?.data?.patient || {};
+      const p = res.data?.data?.patient || res.data?.data || {};
       const u = res.data?.data?.user || user || {};
 
       setName(u.name || `${u.firstName || ''} ${u.lastName || ''}`.trim());
@@ -46,8 +46,18 @@ export default function PatientProfilePage() {
       setBloodGroup(p.bloodGroup || 'O+');
       setGender(p.gender || 'female');
       setDateOfBirth(p.dateOfBirth ? new Date(p.dateOfBirth).toISOString().split('T')[0] : '');
-      setAllergiesText((p.allergies || []).join(', '));
-      setConditionsText((p.chronicConditions || []).join(', '));
+      setAllergiesText(
+        (p.allergies || [])
+          .map((a: any) => (typeof a === 'string' ? a : a?.allergen || ''))
+          .filter(Boolean)
+          .join(', ')
+      );
+      setConditionsText(
+        (p.chronicConditions || p.chronicDiseases || [])
+          .map((c: any) => (typeof c === 'string' ? c : c?.disease || c?.condition || ''))
+          .filter(Boolean)
+          .join(', ')
+      );
 
       if (p.emergencyContact) {
         setEmergencyName(p.emergencyContact.name || '');

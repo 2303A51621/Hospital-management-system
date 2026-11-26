@@ -365,9 +365,9 @@ export default function DoctorPatientsPage() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {selectedPatient.allergies.map((a: any, idx: number) => (
                             <div key={idx} className="p-3 rounded-xl border border-rose-200 bg-rose-50/60 text-xs">
-                              <p className="font-bold text-rose-900">{a.allergen}</p>
-                              <p className="text-rose-700 mt-0.5">Severity: <span className="font-semibold uppercase">{a.severity || 'Moderate'}</span></p>
-                              <p className="text-slate-500 text-[11px]">Reaction: {a.reaction || 'Adverse hypersensitivity'}</p>
+                              <p className="font-bold text-rose-900">{typeof a === 'string' ? a : a.allergen || 'Allergy'}</p>
+                              <p className="text-rose-700 mt-0.5">Severity: <span className="font-semibold uppercase">{(typeof a === 'object' && a.severity) || 'Moderate'}</span></p>
+                              <p className="text-slate-500 text-[11px]">Reaction: {(typeof a === 'object' && a.reaction) || 'Adverse hypersensitivity'}</p>
                             </div>
                           ))}
                         </div>
