@@ -260,7 +260,12 @@ export default function DoctorPatientHistoryPage() {
                             </div>
                             <div className="text-xs text-slate-500 mt-0.5">
                               {pat.gender} • {pat.age ? `${pat.age} years old` : 'Age N/A'} • Phone:{' '}
-                              {pat.phone || pat.emergencyContact || 'Not recorded'}
+                              {pat.phone || (typeof pat.emergencyContact === 'string' ? pat.emergencyContact : pat.emergencyContact?.phone) || 'Not recorded'}
+                              {typeof pat.emergencyContact === 'object' && pat.emergencyContact?.name && (
+                                <span className="ml-2 text-slate-400">
+                                  (Emergency: {pat.emergencyContact.name}{pat.emergencyContact.relationship ? ` - ${pat.emergencyContact.relationship}` : ''})
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -354,6 +359,7 @@ export default function DoctorPatientHistoryPage() {
                               minute: '2-digit',
                             });
 
+                            const eventData = event.data || event.details || {};
                             let icon = <Clock className="w-3.5 h-3.5 text-slate-600" />;
                             let dotColor = 'bg-slate-400';
                             let title = 'Clinical Event';
@@ -361,21 +367,21 @@ export default function DoctorPatientHistoryPage() {
                             if (event.type === 'consultation') {
                               icon = <Activity className="w-3.5 h-3.5 text-teal-600" />;
                               dotColor = 'bg-teal-500 ring-4 ring-teal-100';
-                              title = `Consultation — ${event.data.finalDiagnosis || event.data.preliminaryDiagnosis || 'Clinical Visit'}`;
+                              title = `Consultation — ${eventData.finalDiagnosis || eventData.preliminaryDiagnosis || 'Clinical Visit'}`;
                             } else if (event.type === 'prescription') {
                               icon = <Pill className="w-3.5 h-3.5 text-blue-600" />;
                               dotColor = 'bg-blue-500 ring-4 ring-blue-100';
-                              title = `Prescription Issued (${event.data.medicines?.length || 0} meds)`;
+                              title = `Prescription Issued (${eventData.medicines?.length || 0} meds)`;
                             } else if (event.type === 'lab_test') {
                               icon = <FlaskConical className="w-3.5 h-3.5 text-purple-600" />;
-                              dotColor = event.data.isAbnormal
+                              dotColor = eventData.isAbnormal
                                 ? 'bg-red-500 ring-4 ring-red-100'
                                 : 'bg-purple-500 ring-4 ring-purple-100';
-                              title = `Diagnostic Investigation: ${event.data.testName || 'Lab Test'}`;
+                              title = `Diagnostic Investigation: ${eventData.testName || 'Lab Test'}`;
                             } else if (event.type === 'medical_history_entry') {
                               icon = <FileText className="w-3.5 h-3.5 text-amber-600" />;
                               dotColor = 'bg-amber-500 ring-4 ring-amber-100';
-                              title = `Medical History Update: ${event.data.condition || 'Clinical Note'}`;
+                              title = `Medical History Update: ${eventData.condition || 'Clinical Note'}`;
                             }
 
                             return (
@@ -400,24 +406,24 @@ export default function DoctorPatientHistoryPage() {
                                   {/* Consultation Body */}
                                   {event.type === 'consultation' && (
                                     <div className="text-xs text-slate-700 space-y-1">
-                                      {event.data.symptoms?.length > 0 && (
+                                      {eventData.symptoms?.length > 0 && (
                                         <div>
                                           <span className="font-semibold text-slate-600">Symptoms: </span>
-                                          {event.data.symptoms.join(', ')}
+                                          {eventData.symptoms.join(', ')}
                                         </div>
                                       )}
-                                      {event.data.vitals && (
+                                      {eventData.vitals && (
                                         <div className="text-[11px] text-slate-500 bg-white p-2 rounded border border-slate-100 flex flex-wrap gap-2">
-                                          {event.data.vitals.bloodPressure && <span>BP: {event.data.vitals.bloodPressure}</span>}
-                                          {event.data.vitals.temperature && <span>Temp: {event.data.vitals.temperature}°F</span>}
-                                          {event.data.vitals.pulseRate && <span>Pulse: {event.data.vitals.pulseRate} bpm</span>}
-                                          {event.data.vitals.spo2 && <span>SpO2: {event.data.vitals.spo2}%</span>}
+                                          {eventData.vitals.bloodPressure && <span>BP: {eventData.vitals.bloodPressure}</span>}
+                                          {eventData.vitals.temperature && <span>Temp: {eventData.vitals.temperature}°F</span>}
+                                          {eventData.vitals.pulseRate && <span>Pulse: {eventData.vitals.pulseRate} bpm</span>}
+                                          {eventData.vitals.spo2 && <span>SpO2: {eventData.vitals.spo2}%</span>}
                                         </div>
                                       )}
-                                      {event.data.treatment && (
+                                      {eventData.treatment && (
                                         <div className="text-slate-600">
                                           <span className="font-semibold">Treatment: </span>
-                                          {event.data.treatment}
+                                          {eventData.treatment}
                                         </div>
                                       )}
                                     </div>
@@ -427,12 +433,12 @@ export default function DoctorPatientHistoryPage() {
                                   {event.type === 'prescription' && (
                                     <div className="text-xs text-slate-700 space-y-1">
                                       <div className="flex flex-wrap gap-1">
-                                        {(event.data.medicines || []).map((m: any, mi: number) => (
+                                        {(eventData.medicines || []).map((m: any, mi: number) => (
                                           <span
                                             key={mi}
                                             className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[11px] font-medium"
                                           >
-                                            {m.name} ({m.dosage}) • {m.frequency}
+                                            {m.name || m.medicineName} ({m.dosage}) • {m.frequency}
                                           </span>
                                         ))}
                                       </div>

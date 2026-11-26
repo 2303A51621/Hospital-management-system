@@ -236,6 +236,7 @@ exports.getPatientTimeline = asyncHandler(async (req, res) => {
       description: a.reason || 'Routine follow-up',
       doctor: a.doctorId?.userId?.name || 'Assigned Specialist',
       status: a.status,
+      data: a,
       details: a,
     });
   });
@@ -249,6 +250,7 @@ exports.getPatientTimeline = asyncHandler(async (req, res) => {
       description: c.clinicalNotes || c.treatmentRecommendations || 'Clinical findings documented',
       doctor: c.doctorId?.userId?.name || 'Consulting Physician',
       status: c.status,
+      data: c,
       details: c,
     });
   });
@@ -262,6 +264,7 @@ exports.getPatientTimeline = asyncHandler(async (req, res) => {
       description: `${p.medicines?.length || 0} medications prescribed (${p.diagnosis || 'Standard therapy'})`,
       doctor: p.doctorId?.userId?.name || 'Prescribing Doctor',
       status: p.status,
+      data: p,
       details: p,
     });
   });
@@ -276,6 +279,7 @@ exports.getPatientTimeline = asyncHandler(async (req, res) => {
       doctor: t.doctorId?.userId?.name || 'Ordering Physician',
       status: t.status,
       isAbnormal: t.isAbnormal || false,
+      data: t,
       details: t,
     });
   });
