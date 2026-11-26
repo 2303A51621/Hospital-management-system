@@ -239,6 +239,22 @@ export default function DoctorDashboardPage() {
                 <p className="text-2xl font-black text-rose-800 mt-1">{metrics.emergencyAlertsCount || 0}</p>
                 <span className="text-[10px] text-rose-600 font-medium">Priority queue</span>
               </div>
+
+              <Link
+                to="/doctor/video-consultations"
+                className="p-4 bg-teal-50/80 hover:bg-teal-100/80 rounded-2xl border border-teal-300 shadow-sm transition group flex flex-col justify-between"
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-bold text-teal-900">Video Consults</p>
+                  <Video size={16} className="text-teal-700 group-hover:scale-110 transition-transform" />
+                </div>
+                <div>
+                  <p className="text-xl font-black text-teal-950 mt-1">Virtual Clinic</p>
+                  <span className="text-[10px] text-teal-800 font-bold flex items-center gap-1 mt-0.5">
+                    Admit & Prescribe <ArrowRight size={10} />
+                  </span>
+                </div>
+              </Link>
             </div>
 
             {/* Emergency Alerts Banner (If Any) */}

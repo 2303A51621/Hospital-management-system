@@ -33,6 +33,8 @@ const NursingNote = require('./NursingNote');
 const ShiftHandover = require('./ShiftHandover');
 const NurseShiftAttendance = require('./NurseShiftAttendance');
 const NurseEmergencyAlert = require('./NurseEmergencyAlert');
+const OnlineConsultation = require('./OnlineConsultation');
+const ConsultationMessage = require('./ConsultationMessage');
 
 module.exports = {
   User,
@@ -69,5 +71,7 @@ module.exports = {
   ShiftHandover,
   NurseShiftAttendance,
   NurseEmergencyAlert,
+  OnlineConsultation,
+  ConsultationMessage,
 };
 

@@ -916,4 +916,23 @@ export const nursePortalAPI = {
     api.get<{ success: boolean; reportType: string; timeframe: any; data: any }>(`/nurse-portal/reports?${toSearchParams(params)}`),
 };
 
+export const onlineConsultationAPI = {
+  book: (data: any) =>
+    api.post<{ success: boolean; data: any; message: string }>('/online-consultations/book', data),
+  getPatientConsultations: () =>
+    api.get<{ success: boolean; count: number; data: any[] }>('/online-consultations/patient/my-consultations'),
+  getDoctorConsultations: () =>
+    api.get<{ success: boolean; count: number; data: any[] }>('/online-consultations/doctor/my-consultations'),
+  updateStatus: (id: string, data: { status: string; rejectionReason?: string; cancellationReason?: string }) =>
+    api.patch<{ success: boolean; message: string; data: any }>(`/online-consultations/${id}/status`, data),
+  getRoomDetails: (roomId: string) =>
+    api.get<{ success: boolean; data: any }>(`/online-consultations/room/${roomId}`),
+  completeConsultation: (id: string, data: { clinicalNotes?: string; diagnosis?: string; prescriptions?: any[]; followUpDate?: string }) =>
+    api.post<{ success: boolean; message: string; data: any }>(`/online-consultations/${id}/complete`, data),
+  getAdminConsultations: (params: Record<string, string | number | undefined> = {}) =>
+    api.get<{ success: boolean; data: any[]; pagination: any; analytics: any }>(`/online-consultations/admin/all?${toSearchParams(params)}`),
+  getDoctorSlots: (doctorId: string, date: string) =>
+    api.get<{ success: boolean; availableSlots: string[]; allSlots: { slot: string; available: boolean }[] }>(`/online-consultations/slots?${toSearchParams({ doctorId, date })}`),
+};
+
 export default api;

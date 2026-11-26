@@ -19,6 +19,7 @@ import ProfilePage from './pages/ProfilePage';
 import HomePage from './pages/HomePage';
 import EmergencyAdminPage from './pages/EmergencyAdminPage';
 import AdminManagementPage from './pages/AdminManagementPage';
+import AdminOnlineConsultationsPage from './pages/AdminOnlineConsultationsPage';
 import StaffPage from './pages/StaffPage';
 import WardsPage from './pages/WardsPage';
 import MedicalRecordsPage from './pages/MedicalRecordsPage';
@@ -32,6 +33,7 @@ import DoctorDashboardPage from './pages/doctor/DoctorDashboardPage';
 import DoctorPatientsPage from './pages/doctor/DoctorPatientsPage';
 import DoctorAppointmentsPage from './pages/doctor/DoctorAppointmentsPage';
 import DoctorConsultationsPage from './pages/doctor/DoctorConsultationsPage';
+import DoctorVideoConsultationsPage from './pages/doctor/DoctorVideoConsultationsPage';
 import DoctorPrescriptionsPage from './pages/doctor/DoctorPrescriptionsPage';
 import DoctorMedicalReportsPage from './pages/doctor/DoctorMedicalReportsPage';
 import DoctorPatientHistoryPage from './pages/doctor/DoctorPatientHistoryPage';
@@ -194,6 +196,14 @@ export default function App() {
           element={
             <ProtectedRoute requiredRoles={['doctor', 'admin', 'super_admin']}>
               <DoctorConsultationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/doctor/video-consultations"
+          element={
+            <ProtectedRoute requiredRoles={['doctor', 'admin', 'super_admin']}>
+              <DoctorVideoConsultationsPage />
             </ProtectedRoute>
           }
         />
@@ -554,6 +564,14 @@ export default function App() {
           element={
             <ProtectedRoute requiredRoles={['admin', 'super_admin']}>
               <AdminManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/online-consultations"
+          element={
+            <ProtectedRoute requiredRoles={['admin', 'super_admin']}>
+              <AdminOnlineConsultationsPage />
             </ProtectedRoute>
           }
         />

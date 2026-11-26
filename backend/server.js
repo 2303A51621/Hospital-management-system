@@ -1,12 +1,15 @@
 const path = require('node:path');
+const http = require('node:http');
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const dotenv = require('dotenv');
+const { Server } = require('socket.io');
 const { connectDB } = require('./src/config/db');
 require('./src/models/index'); // Pre-load all schemas into Mongoose before routing
 const { notFound, errorHandler } = require('./src/middleware/errorHandler');
 const { handleRazorpayWebhook } = require('./src/controllers/billingController');
+const { initVideoSignaling } = require('./src/services/videoSignaling');
 
 dotenv.config({ path: path.resolve(__dirname, '.env') });
 dotenv.config({ path: path.resolve(__dirname, '.env.local') });
@@ -70,14 +73,22 @@ app.use('/api/ai-chat', require('./src/routes/aiChatRoutes'));
 app.use('/api/doctor-portal', require('./src/routes/doctorPortalRoutes'));
 app.use('/api/patient-portal', require('./src/routes/patientPortalRoutes'));
 app.use('/api/nurse-portal', require('./src/routes/nursePortalRoutes'));
+app.use('/api/online-consultations', require('./src/routes/onlineConsultationRoutes'));
 
 app.use(notFound);
 app.use(errorHandler);
 
 const start = async () => {
   await connectDB();
-  const server = app.listen(port, host, () => {
-    console.log(`Hospital backend running on http://${host}:${port}`);
+  const server = http.createServer(app);
+  const io = new Server(server, {
+    cors: corsOptions,
+    transports: ['websocket', 'polling'],
+  });
+  initVideoSignaling(io);
+
+  server.listen(port, host, () => {
+    console.log(`Hospital backend running on http://${host}:${port} with Socket.io WebRTC signaling`);
   });
   server.on('error', (error) => {
     console.error('Backend server failed to listen:', error.message || error);

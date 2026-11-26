@@ -57,6 +57,7 @@ export default function Sidebar() {
         { path: '/doctor/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { path: '/doctor/patients', label: 'My Patients', icon: Users },
         { path: '/doctor/appointments', label: 'Appointments', icon: Calendar },
+        { path: '/doctor/video-consultations', label: 'Video Consultations', icon: Video },
         { path: '/doctor/consultations', label: 'Consultations', icon: Stethoscope },
         { path: '/doctor/prescriptions', label: 'Prescriptions', icon: Pill },
         { path: '/doctor/reports', label: 'Medical Reports', icon: FlaskConical },
@@ -232,6 +233,12 @@ export default function Sidebar() {
       path: '/admin-management',
       label: 'Admin Panel',
       icon: ShieldCheck,
+      roles: ['admin', 'super_admin'],
+    },
+    {
+      path: '/admin/online-consultations',
+      label: 'Online Consultations',
+      icon: Video,
       roles: ['admin', 'super_admin'],
     },
     {

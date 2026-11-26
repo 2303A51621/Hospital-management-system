@@ -365,6 +365,16 @@ export default function DoctorAppointmentsPage() {
                                   </>
                                 )}
 
+                                {appt.consultationType === 'telemedicine' && (
+                                  <button
+                                    onClick={() => navigate('/doctor/video-consultations')}
+                                    className="px-2.5 py-1 text-xs font-bold rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow transition flex items-center gap-1"
+                                    title="Open Telehealth Video Desk"
+                                  >
+                                    <Video size={12} /> Video
+                                  </button>
+                                )}
+
                                 <button
                                   onClick={() => navigate(`/doctor/consultations?appointmentId=${appt._id}&patientId=${appt.patientId?._id || ''}`)}
                                   className="px-2.5 py-1 text-xs font-bold rounded-lg bg-teal-700 text-white hover:bg-teal-800 shadow transition flex items-center gap-1"
